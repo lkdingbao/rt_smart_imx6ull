@@ -30,6 +30,47 @@ void gpio_set_iomux(const struct skt_gpio *gpio)
     IOMUXC_SetPinConfig(v[0], gpio->muxMode, v[1], gpio->inputDaisy, v[2], gpio->configValue);
 }
 
+void gpio_set_int_mode(GPIO_Type *port, rt_uint32_t pin, const gpio_interrupt_mode_t pinInterruptMode)
+{
+    volatile rt_uint32_t *icr;
+    rt_uint32_t icrShift;
+
+    icrShift = pin;
+
+    /* Register reset to default value */
+    port->EDGE_SEL &= ~(1U << pin);
+
+    if(pin < 16)
+    {
+        icr = &(port->ICR1);
+    }
+    else
+    {
+        icr = &(port->ICR2);
+        icrShift -= 16;
+    }
+    switch(pinInterruptMode)
+    {
+        case(kGPIO_IntLowLevel):
+            *icr &= ~(3U << (2 * icrShift));
+            break;
+        case(kGPIO_IntHighLevel):
+            *icr = (*icr & (~(3U << (2 * icrShift)))) | (1U << (2 * icrShift));
+            break;
+        case(kGPIO_IntRisingEdge):
+            *icr = (*icr & (~(3U << (2 * icrShift)))) | (2U << (2 * icrShift));
+            break;
+        case(kGPIO_IntFallingEdge):
+            *icr |= (3U << (2 * icrShift));
+            break;
+        case(kGPIO_IntRisingOrFallingEdge):
+            port->EDGE_SEL |= (1U << pin);
+            break;
+        default:
+            break;
+    }
+}
+
 void gpio_set_mode(GPIO_Type *port, rt_uint32_t pin, const gpio_pin_config_t* cfg)
 {
     /* Register reset to default value */
@@ -45,6 +86,9 @@ void gpio_set_mode(GPIO_Type *port, rt_uint32_t pin, const gpio_pin_config_t* cf
         gpio_write(port, pin, cfg->outputLogic);
         port->GDIR |= (1U << pin);
     }
+
+    /* Configure GPIO pin interrupt mode */
+    gpio_set_int_mode(port, pin, cfg->interruptMode);
 }
 
 void gpio_write(GPIO_Type *port, rt_uint32_t pin, rt_uint32_t lvl)

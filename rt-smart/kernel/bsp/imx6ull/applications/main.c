@@ -13,6 +13,7 @@
 
 #include "__def.h"
 #include "drv_pin.h"
+#include "drv_gt9147.h"
 
 #define DBG_TAG "main"
 #define DBG_LVL DBG_LOG
@@ -34,10 +35,10 @@ int main(void)
     LOG_D("build %s %s", __DATE__, __TIME__);
 #endif
 
-    rt_console_set_device(RT_CONSOLE_DEVICE_NAME);
-
-    LOG_D("rt-smart on imx6ull");
-    LOG_D("build %s %s", __DATE__, __TIME__);
+//    rt_console_set_device(RT_CONSOLE_DEVICE_NAME);
+//
+//    LOG_D("rt-smart on imx6ull");
+//    LOG_D("build %s %s", __DATE__, __TIME__);
 
 #ifdef RT_FUNC_SELF_TEST
     _self_test();
@@ -49,6 +50,12 @@ int main(void)
 #ifdef RT_FUNC_SELF_TEST
 static void _self_test(void)
 {
+    rt_device_t icm20608_dev;
+    rt_device_t pcf8574x_dev;
+    rt_device_t lcd_dev;
+    rt_device_t pin_dev;
+    rt_device_t gt9147_dev;
+
     rt_uint8_t dummy_data[16];
 
     UNUSED(dummy_data);
@@ -56,27 +63,22 @@ static void _self_test(void)
         dummy_data[i] = 0x30 + i;
 
 #ifdef RT_FUNC_SELF_TEST_SPI_DEV
-    rt_device_t icm20608_dev;
-
     icm20608_dev= rt_device_find("icm20608");
     rt_device_open(icm20608_dev, RT_DEVICE_OFLAG_RDWR);
     rt_device_write(icm20608_dev, 0, dummy_data, GET_ARRAY_NUM(dummy_data));
-    rt_device_close(icm20608_dev);
 #endif
 
-#ifdef RT_FUNC_SELF_TEST_SPI_DEV
-    rt_device_t pcf8574x_dev;
+#ifdef RT_FUNC_SELF_TEST_I2C_DEV
+//    pcf8574x_dev= rt_device_find("pcf8574x");
+//    rt_device_open(pcf8574x_dev, RT_DEVICE_FLAG_WRONLY);
+//    rt_device_write(pcf8574x_dev, 0, "hello-world", strlen("hello-world"));
+//    rt_device_write(pcf8574x_dev, 16, "2020-01-17", strlen("2020-01-17"));
 
-    pcf8574x_dev= rt_device_find("pcf8574x");
-    rt_device_open(pcf8574x_dev, RT_DEVICE_FLAG_WRONLY);
-    rt_device_write(pcf8574x_dev, 0, "hello-world", strlen("hello-world"));
-    rt_device_write(pcf8574x_dev, 16, "2020-01-17", strlen("2020-01-17"));
-    rt_device_close(pcf8574x_dev);
+    gt9147_dev= rt_device_find("gt9147");
+    rt_device_open(gt9147_dev, RT_DEVICE_FLAG_WRONLY);
 #endif
 
 #ifdef RT_FUNC_SELF_TEST_LCD_DEV
-    rt_device_t lcd_dev;
-
     lcd_dev= rt_device_find("clcd");
     rt_device_open(lcd_dev, RT_DEVICE_OFLAG_RDWR);
     rt_device_control(lcd_dev, FBIOGET_VSCREENINFO, &_g_lcd_info);
@@ -84,35 +86,37 @@ static void _self_test(void)
     rt_device_write(lcd_dev, 16, "2020-01-17\n", strlen("2020-01-17\n"));
 #endif
 
-    rt_device_t pin_dev;
-
+#ifdef RT_FUNC_SELF_TEST_PIN_DEV
     struct rt_device_pin_mode pin_mode;
     struct rt_device_pin_status pin_status;
 
     pin_mode.pin = LED_PIN;
     pin_mode.mode = PIN_MODE_OUTPUT;
 
-    pin_status.pin = pin_mode.pin;
-
     pin_dev= rt_device_find("pin");
-    if (!pin_dev)
-    {
-        return;
-    }
-
     rt_device_open(pin_dev, RT_DEVICE_OFLAG_RDWR);
     rt_device_control(pin_dev, 0, &pin_mode);
 
+    pin_status.pin = pin_mode.pin;
+    pin_status.status = 1;
+    rt_device_write(pin_dev, 0, &pin_status, sizeof(pin_status));
+#endif
+
     while (1)
     {
-        pin_status.status = 0;
-        rt_device_write(pin_dev, 0, &pin_status, sizeof(pin_status));
-        rt_thread_mdelay(500);
-
-        pin_status.status = 1;
-        rt_device_write(pin_dev, 0, &pin_status, sizeof(pin_status));
-        rt_thread_mdelay(500);
+        if (_g_gt9147_flag & GT_FLAG_NEW_DATA)
+        {
+            rt_device_read(gt9147_dev, 0, RT_NULL, 0);
+        }
+        rt_thread_mdelay(40);
     }
+
+    /* Never Run to Here! */
+    rt_device_close(icm20608_dev);
+    rt_device_close(pcf8574x_dev);
+    rt_device_close(lcd_dev);
+    rt_device_close(pin_dev);
+    rt_device_close(gt9147_dev);
 }
 #endif //#ifdef RT_FUNC_SELF_TEST
 

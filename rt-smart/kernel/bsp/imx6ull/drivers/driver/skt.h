@@ -162,6 +162,12 @@ struct skt_lcd_console
     rt_uint32_t                 flag;
 };
 
+struct skt_irq
+{
+    const char                  *name;
+    rt_uint32_t                 irqno;
+};
+
 #ifdef cplusplus
 }
 #endif
