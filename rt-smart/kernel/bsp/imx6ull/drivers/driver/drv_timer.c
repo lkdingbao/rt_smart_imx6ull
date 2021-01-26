@@ -61,12 +61,16 @@ static void sys_counter_init(void)
 
 static void _sys_counter_isr(int vector, void *param)
 {
+    rt_interrupt_enter();
+
     rt_tick_increase();
 
     /* set next irq */
     arch_timer_reg_write_cp15_ctrl(0);
     arch_timer_reg_write_cp15_cval(arch_timer_reg_get_cp15_cval() + SYS_COUNTER_TICK_PERIOD);
     arch_timer_reg_write_cp15_ctrl(1);
+
+    rt_interrupt_leave();
 }
 
 int rt_hw_timer_init(void)

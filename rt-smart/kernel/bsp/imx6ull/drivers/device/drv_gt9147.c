@@ -29,8 +29,10 @@
 #define _DEVICE_NAME        "gt9147"
 #define _BUS_NAME           "i2c2"
 
+/* i2c addr can sel 0x14 or 0x5D with setting INT_PIN timing */
 #define _BUS_I2C_ADDR       0x14
 
+/* GT9174 only support 5 touch points! */
 #define _TOUCH_POINT_NUM    5
 
 #define INT_PIN         GET_PIN(0,9)
@@ -42,9 +44,11 @@ _internal_ro struct skt_gpio _k_gpio_info[] =
     {IOMUXC_SNVS_SNVS_TAMPER9_GPIO5_IO09, 0, 0x10B0}, //rst pin
 };
 
-_internal_ro struct skt_irq _k_gpio_irq_info =
+_internal_rw struct skt_irq _s_gpio_irq_info =
 {
-    .name = "touch",
+    .name = "gt9174_int",
+    .periph.paddr = 0,
+    .periph.vaddr = 0, //must seted to 0!
     .irqno = GPIO1_Combined_0_15_IRQn,
 };
 
@@ -100,6 +104,19 @@ static void _read_data( rt_device_t dev, rt_uint16_t reg, rt_uint8_t *data, rt_u
     rt_device_read(dev, (RT_I2C_REG_ADDR_16BIT<<16) | reg, data, len);
 }
 
+void _write_one_data( rt_device_t dev, rt_uint16_t reg, rt_uint8_t data )
+{
+    _write_data(dev, reg, &data, 1);
+}
+
+static rt_uint8_t _read_one_data( rt_device_t dev, rt_uint16_t reg )
+{
+    rt_uint8_t data;
+
+    _read_data(dev, reg, &data, 1);
+    return data;
+}
+
 static rt_uint8_t _get_verison( rt_device_t dev )
 {
     rt_uint8_t pid[5];
@@ -108,40 +125,36 @@ static rt_uint8_t _get_verison( rt_device_t dev )
     _read_data(dev, GT_PID_REG, pid, 4);
     pid[4] = 0;
 
-    data = 0x02;
-    _write_data(dev, GT_CTRL_REG, &data, 1);
+    data = _read_one_data(dev, GT_CFGS_REG);
 
-    _read_data(dev, GT_CFGS_REG, &data, 1);
-
-    LOG_D("Product ID: %s Ver: %02X", pid, data);
+    LOG_D("product id: %s ver: %02X", pid, data);
 
     return data;
 }
 
-static void _get_touchdata( rt_device_t dev )
+static rt_err_t _get_touchdata( rt_device_t dev )
 {
     rt_uint8_t dummy[4];
     rt_uint8_t tpnum;
 
-    _read_data(dev, GT_RESULT_REG, &tpnum, 1);
+    tpnum = _read_one_data(dev, GT_RESULT_REG);
     if ( !(tpnum & 0x80) )
     {
         rt_hw_ms_delay(1);
-        _read_data(dev, GT_RESULT_REG, &tpnum, 1);
+        tpnum = _read_one_data(dev, GT_RESULT_REG);
         if ( !(tpnum & 0x80) )
         {
-            return;
+            return -RT_EEMPTY;
         }
     }
     tpnum &= 0x0F;
 
-    dummy[0] = 0;
-    _write_data(dev, GT_RESULT_REG, dummy, 1);
+    _write_one_data(dev, GT_RESULT_REG, 0x00);
 
     _s_gt9147_tpnum = tpnum;
 
     if (0 == _s_gt9147_tpnum) {
-        return; //must clear GT_RESULT_REG register before return!
+        return -RT_EEMPTY; //must clear GT_RESULT_REG register before return!
     }
 
     for (int i=0; i<_TOUCH_POINT_NUM; i++)
@@ -155,15 +168,17 @@ static void _get_touchdata( rt_device_t dev )
 
     LOG_D("tpnum: %02X", _s_gt9147_tpnum);
     LOG_D("x_pos: %d %d %d %d %d", _s_gt9147_tpdata[0].xPos,
-                                   _s_gt9147_tpdata[1].yPos,
+                                   _s_gt9147_tpdata[1].xPos,
                                    _s_gt9147_tpdata[2].xPos,
-                                   _s_gt9147_tpdata[3].yPos,
-                                   _s_gt9147_tpdata[4].yPos );
+                                   _s_gt9147_tpdata[3].xPos,
+                                   _s_gt9147_tpdata[4].xPos );
     LOG_D("y_pos: %d %d %d %d %d", _s_gt9147_tpdata[0].yPos,
                                    _s_gt9147_tpdata[1].yPos,
                                    _s_gt9147_tpdata[2].yPos,
                                    _s_gt9147_tpdata[3].yPos,
                                    _s_gt9147_tpdata[4].yPos );
+
+    return RT_EOK;
 }
 
 static void _set_configuration( rt_device_t dev, rt_uint8_t svFlag )
@@ -185,18 +200,14 @@ static void _set_configuration( rt_device_t dev, rt_uint8_t svFlag )
 
 static void _gt9147_int_isr( int irqno, void* parameter )
 {
-    rt_uint32_t paddr, vaddr;
-    rt_uint8_t port_num, pin_num;
+    struct skt_irq *irq = (struct skt_irq*)parameter;
+
+    rt_interrupt_enter();
 
     _g_gt9147_flag = GT_FLAG_NEW_DATA;
+    GPIO_ClearPinsInterruptFlags((GPIO_Type*)irq->periph.vaddr, (1 << irq->pin));
 
-    port_num = GET_PORT_FIELD(INT_PIN);
-    pin_num = GET_PIN_FIELD(INT_PIN);
-
-    paddr = GET_GPIO_BASE_ADDR(port_num);
-    vaddr = platform_get_periph_vaddr((rt_uint32_t)paddr);
-
-    GPIO_ClearPinsInterruptFlags((GPIO_Type*)vaddr, (1 << pin_num));
+    rt_interrupt_leave();
 }
 
 /*
@@ -223,6 +234,10 @@ static void _gt9147_gpio_init( rt_uint8_t mode )
         paddr = GET_GPIO_BASE_ADDR(port_num);
         vaddr = platform_get_periph_vaddr((rt_uint32_t)paddr);
 
+        _s_gpio_irq_info.periph.paddr = paddr;
+        _s_gpio_irq_info.periph.vaddr = vaddr;
+        _s_gpio_irq_info.pin = pin_num;
+
         GPIO_PinInit((GPIO_Type*)vaddr, pin_num, &config);
         GPIO_EnableInterrupts((GPIO_Type*)vaddr, (1 << pin_num));
     }
@@ -235,7 +250,7 @@ static void _gt9147_gpio_init( rt_uint8_t mode )
 
         config.direction = kGPIO_DigitalOutput;
         config.interruptMode = kGPIO_NoIntmode;
-        config.outputLogic = PIN_HIGH;
+        config.outputLogic = PIN_LOW;
 
         port_num = GET_PORT_FIELD(INT_PIN);
         pin_num = GET_PIN_FIELD(INT_PIN);
@@ -257,32 +272,36 @@ static void _gt9147_gpio_init( rt_uint8_t mode )
 
 static rt_err_t _gt9147_device_init( struct rt_i2c_bus_device *device )
 {
-    rt_uint8_t data;
-
     RT_ASSERT(RT_NULL != device);
 
     _gt9147_gpio_init(1); //config the INT_PIN/RST_PIN at output mode
 
-    rt_pin_write(RST_PIN, PIN_LOW);
-    rt_hw_ms_delay(10);
+    /*
+     * If INT_PIN keep High-Level after Reset but longer than 5ms
+     * Addr is 0x14, otherwise is 0x5D
+     */
 
-    rt_pin_write(RST_PIN, PIN_HIGH);
-    rt_hw_ms_delay(10);
-
-    rt_pin_write(INT_PIN, PIN_LOW); //sel slave chip address with 0x28/0x29
+    rt_pin_write(RST_PIN, PIN_LOW); //reset start
     rt_hw_ms_delay(100);
+    rt_pin_write(INT_PIN, PIN_HIGH);
+    rt_hw_us_delay(200);
+    rt_pin_write(RST_PIN, PIN_HIGH); //reset end
+    rt_hw_ms_delay(10); //longger than 5ms, sel 0x14
+
+    rt_pin_write(INT_PIN, PIN_LOW);
+    rt_hw_ms_delay(100); //not less than 50ms!
 
     _gt9147_gpio_init(0); //config the INT_PIN at interrupt mode
     rt_hw_ms_delay(50);
 
     _get_verison((rt_device_t)device);
+
+    _write_one_data((rt_device_t)device, GT_CTRL_REG, 2);
+
     _set_configuration((rt_device_t)device, 0);
+    _get_verison((rt_device_t)device);
 
-    data = 0;
-    _write_data((rt_device_t)device, GT_CTRL_REG, &data, 1);
-
-    _read_data((rt_device_t)device, GT_CFGS_REG, &data, 1);
-    LOG_D("New Ver %02X", data);
+    _write_one_data((rt_device_t)device, GT_CTRL_REG, 0);
 
     return RT_EOK;
 }
@@ -294,9 +313,9 @@ static rt_err_t _gt9147_ops_open( rt_device_t dev,
 
     RT_ASSERT(RT_NULL != dev);
 
-    if (!(dev->flag & RT_DEVICE_FLAG_WRONLY))
+    if (!(dev->flag & RT_DEVICE_FLAG_RDONLY))
     {
-        LOG_D("only support write option!");
+        LOG_W("only support read option!");
         return -RT_ERROR;
     }
 
@@ -307,7 +326,7 @@ static rt_err_t _gt9147_ops_open( rt_device_t dev,
         i2c_bus = rt_device_find(_BUS_NAME);
         if (RT_NULL == i2c_bus)
         {
-            LOG_D("not find bus device[%s]", i2c_bus);
+            LOG_W("not find bus device[%s]", i2c_bus);
             return -RT_EIO;
         }
 
@@ -316,8 +335,8 @@ static rt_err_t _gt9147_ops_open( rt_device_t dev,
 
         _gt9147_device_init(dev->user_data);
 
-        rt_hw_interrupt_install(_k_gpio_irq_info.irqno, _gt9147_int_isr, RT_NULL, _k_gpio_irq_info.name);
-        rt_hw_interrupt_umask(_k_gpio_irq_info.irqno);
+        rt_hw_interrupt_install(_s_gpio_irq_info.irqno, _gt9147_int_isr, &_s_gpio_irq_info, _s_gpio_irq_info.name);
+        rt_hw_interrupt_umask(_s_gpio_irq_info.irqno);
     }
 
     return RT_EOK;
@@ -350,6 +369,7 @@ static rt_size_t _gt9147_ops_read( rt_device_t dev,
     bus = (struct rt_i2c_bus_device*)(dev->user_data);
 
     _get_touchdata((rt_device_t)bus);
+    _g_gt9147_flag &= ~GT_FLAG_NEW_DATA;
 
     return RT_EOK;
 }
@@ -388,7 +408,7 @@ int rt_hw_gt9147_init(void)
 
     device->user_data = RT_NULL;
 
-    rt_device_register(device, _DEVICE_NAME, RT_DEVICE_FLAG_WRONLY);
+    rt_device_register(device, _DEVICE_NAME, RT_DEVICE_FLAG_RDONLY);
 
     return RT_EOK;
 }

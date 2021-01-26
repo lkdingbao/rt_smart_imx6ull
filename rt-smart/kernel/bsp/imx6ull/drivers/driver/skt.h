@@ -165,6 +165,10 @@ struct skt_lcd_console
 struct skt_irq
 {
     const char                  *name;
+
+    struct skt_periph           periph;
+    rt_uint8_t                  pin;
+
     rt_uint32_t                 irqno;
 };
 

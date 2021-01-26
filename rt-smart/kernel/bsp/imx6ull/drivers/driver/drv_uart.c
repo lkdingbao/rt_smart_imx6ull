@@ -319,9 +319,14 @@ _internal_ro struct rt_uart_ops _k_uart_ops =
 
 static void _uart_isr( int irqno, void* parameter )
 {
-    struct rt_serial_device *serial = (struct rt_serial_device *)parameter;
+    struct rt_serial_device *serial;
 
+    rt_interrupt_enter();
+
+    serial = (struct rt_serial_device *)parameter;
     rt_hw_serial_isr(serial, RT_SERIAL_EVENT_RX_IND);
+
+    rt_interrupt_leave();
 }
 
 int rt_hw_uart_init(void)
