@@ -9,7 +9,9 @@
 
 #include <rtconfig.h>
 #include <rthw.h>
- 
+
+#ifdef RT_USING_SPI
+
 #include <board.h>
 #include <lwp.h>
  
@@ -22,8 +24,6 @@
 #define DBG_TAG "spi"
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
-
-#ifdef RT_USING_SPI
 
 enum 
 {

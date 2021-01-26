@@ -10,7 +10,9 @@
 #ifndef __DRV_PCF8574X_H__
 #define __DRV_PCF8574X_H__
 
-#include <board.h>
+#include "skt.h"
+
+#ifdef RT_USING_PCF8574
 
 //* lcm模块说明文档：
 //* 
@@ -43,5 +45,6 @@
 //*                     B       忙标志
 //*                     AAAAAAA 地址
 
+#endif //#ifdef RT_USING_PCF8574
 #endif //#ifndef __DRV_PCF8574X_H__
 

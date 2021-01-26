@@ -1,0 +1,24 @@
+menu "Platform Device Configuration"
+
+config RT_USING_GT7147
+    bool "Enable GT9147"
+    select RT_USING_I2C
+    default y
+
+    if RT_USING_GT7147
+        config TOUCH_POINT_NUM
+            int "Number of touch point"
+            default 5
+    endif
+
+config RT_USING_ICM20608
+    bool "Enable ICM20608"
+    select RT_USING_SPI
+    default y
+
+config RT_USING_PCF8574
+    bool "Enable PCF8574"
+    select RT_USING_I2C
+    default y
+
+endmenu

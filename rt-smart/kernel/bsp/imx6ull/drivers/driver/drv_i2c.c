@@ -9,7 +9,9 @@
 
 #include <rtconfig.h>
 #include <rthw.h>
-     
+
+#ifdef RT_USING_I2C
+
 #include <board.h>
 #include <lwp.h>
      
@@ -22,8 +24,6 @@
 #define DBG_TAG "i2c"
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
-
-#ifdef RT_USING_I2C
 
 enum 
 {

@@ -11,6 +11,8 @@
 #include <rthw.h>
 #include <rtdevice.h>
 
+#ifdef RT_USING_PCF8574
+
 #include <board.h>
 #include <lwp.h>
 #include <lwp_user_mm.h>
@@ -227,3 +229,4 @@ int rt_hw_pcf8574x_init(void)
 }
 INIT_COMPONENT_EXPORT(rt_hw_pcf8574x_init);
 
+#endif //#ifdef RT_USING_PCF8574

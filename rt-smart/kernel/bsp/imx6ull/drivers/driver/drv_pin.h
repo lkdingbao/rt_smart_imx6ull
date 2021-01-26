@@ -10,7 +10,7 @@
 #ifndef __DRV_PIN_H__
 #define __DRV_PIN_H__
 
-#include <board.h>
+#include "skt.h"
 
 /* 
  * p, GPIOx, count fron 0, 0~4 is valid

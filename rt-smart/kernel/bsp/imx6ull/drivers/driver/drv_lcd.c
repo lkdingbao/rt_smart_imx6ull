@@ -11,6 +11,8 @@
 #include <rthw.h>
 #include <rtdevice.h>
 
+#ifdef RT_USING_RGBLCD
+
 #include <board.h>
 #include <lwp.h>
 #include <lwp_user_mm.h>
@@ -28,7 +30,8 @@
 #define DBG_LVL DBG_LOG
 #include <rtdbg.h>
 
-#ifdef RT_LCD_CONSOLE_PARSER
+#if ( defined (RT_LCD_CONSOLE_DEBUG)  \
+   && defined (RT_LCD_CONSOLE_PARSER) )
 #define _PARSER_FLAG_ANALYSE       (1 << 0)
 #define _PARSER_FLAG_FINISH        (1 << 1)
 #endif
@@ -102,7 +105,8 @@ _internal_rw struct skt_lcd_console _s_lcd_console =
 };
 #endif
 
-#ifdef RT_LCD_CONSOLE_PARSER
+#if ( defined (RT_LCD_CONSOLE_DEBUG)  \
+   && defined (RT_LCD_CONSOLE_PARSER) )
 _internal_ro rt_uint32_t _k_console_color_tbl[] = 
 {
     RGB_COLOR_BLACK,    //30
@@ -279,7 +283,8 @@ _lcd_ops_control_exit:
     return result;
 }
 
-#ifdef RT_LCD_CONSOLE_PARSER
+#if ( defined (RT_LCD_CONSOLE_DEBUG)  \
+   && defined (RT_LCD_CONSOLE_PARSER) )
 static void _lcd_console_parser_get_color( const struct skt_parser *parser, rt_uint32_t *pcolor )
 {
     rt_uint32_t color_code = 0;
@@ -612,9 +617,18 @@ int lcds(int argc, char **argv)
 
     for (int i=0; i<strlen(argv[1]); i++)
     {
+#ifdef RT_LCD_CONSOLE_DEBUG
         _lcd_console_ops_putc(&_s_lcd_console.parent, argv[1][i]);
+#else
+        rt_kprintf("%c", argv[1][i]);
+#endif
     }
+
+#ifdef RT_LCD_CONSOLE_DEBUG
     _lcd_console_ops_putc(&_s_lcd_console.parent, '\n');
+#else
+    rt_kprintf("\n");
+#endif
 
     return 0;
 }
@@ -645,4 +659,6 @@ int lcdn(int argc, char **argv)
     return 0;
 }
 MSH_CMD_EXPORT_ALIAS(lcdn, lcdn, <usr> rgb lcd probe data);
+
+#endif //#ifdef RT_USING_RGBLCD
 

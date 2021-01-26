@@ -16,6 +16,9 @@
 #include "__def.h"
 #include "realview.h"
 #include "drv_timer.h"
+#ifdef RT_USING_LVGL
+#include "lvgl.h"
+#endif
 
 #define SYS_COUNTER_TICK_PERIOD     (rt_uint32_t)(_s_system_freq / RT_TICK_PER_SECOND)
 
@@ -64,6 +67,10 @@ static void _sys_counter_isr(int vector, void *param)
     rt_interrupt_enter();
 
     rt_tick_increase();
+
+#ifdef RT_USING_LVGL
+    lv_tick_inc(SYS_COUNTER_TICK_PERIOD);
+#endif
 
     /* set next irq */
     arch_timer_reg_write_cp15_ctrl(0);

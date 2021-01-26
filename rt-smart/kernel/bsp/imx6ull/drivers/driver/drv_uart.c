@@ -11,14 +11,14 @@
 #include <rthw.h>
 #include <rtdevice.h>
 
+#ifdef RT_USING_UART
+
 #include <board.h>
 #include <lwp.h>
 
 #include "__def.h"
 #include "realview.h"
 #include "drv_uart.h"
-
-#ifdef RT_USING_UART
 
 enum 
 {

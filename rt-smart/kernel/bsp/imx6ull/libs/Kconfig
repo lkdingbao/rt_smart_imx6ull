@@ -1,0 +1,13 @@
+menu "Third-party Libraries Configuration"
+
+config RT_USING_LVGL
+    bool "Enable LittlevGL"
+    default n
+
+    if RT_USING_LVGL
+        config BSP_USING_LVGL_GPU
+            bool "Enable LittlevGL GPU"
+            default n
+    endif
+
+endmenu

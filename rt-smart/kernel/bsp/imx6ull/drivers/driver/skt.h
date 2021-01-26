@@ -172,6 +172,17 @@ struct skt_irq
     rt_uint32_t                 irqno;
 };
 
+struct skt_touch_data
+{
+    rt_uint16_t                 flag;
+
+    rt_uint8_t                  max; //max supported point number
+    rt_uint8_t                  num; //current get point number
+
+    uint16_t                    x[TOUCH_POINT_NUM];
+    uint16_t                    y[TOUCH_POINT_NUM];
+};
+
 #ifdef cplusplus
 }
 #endif

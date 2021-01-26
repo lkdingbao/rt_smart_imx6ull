@@ -14,12 +14,19 @@
 #include "__def.h"
 #include "drv_pin.h"
 #include "drv_gt9147.h"
+#include "bsp_lcdapi.h"
+#include "rt_lcd.h"
+#ifdef RT_USING_LVGL
+#include "lvgl.h"
+#endif
 
 #define DBG_TAG "main"
 #define DBG_LVL DBG_LOG
 #include <rtdbg.h>
 
 #define LED_PIN                 GET_PIN(0,3)
+
+struct skt_touch_data _g_touch_data;
 
 #ifdef RT_FUNC_SELF_TEST
 static void _self_test(void);
@@ -33,12 +40,12 @@ int main(void)
 
     LOG_D("rt-smart on imx6ull");
     LOG_D("build %s %s", __DATE__, __TIME__);
-#endif
 
     rt_console_set_device(RT_CONSOLE_DEVICE_NAME);
 
     LOG_D("rt-smart on imx6ull");
     LOG_D("build %s %s", __DATE__, __TIME__);
+#endif
 
 #ifdef RT_FUNC_SELF_TEST
     _self_test();
@@ -48,32 +55,94 @@ int main(void)
 }
 
 #ifdef RT_FUNC_SELF_TEST
-static void touch_entry( void * parameter )
+#ifdef RT_USING_LVGL
+static void btn_event_cb(lv_obj_t * btn, lv_event_t event)
 {
-    rt_device_t gt9147_dev;
+    static uint8_t _btn_cnt = 0;
 
-    gt9147_dev= rt_device_find("gt9147");
-    rt_device_open(gt9147_dev, RT_DEVICE_FLAG_RDONLY);
+    if (event == LV_EVENT_PRESSED) 
+    {
+        lv_obj_t *label = lv_obj_get_child(btn, NULL);
+        lv_label_set_text_fmt(label, "Button: %d", ++_btn_cnt);
+    }
+}
+
+static void lvgl_first_demo_start(void)
+{
+    lv_obj_t *btn = lv_btn_create(lv_scr_act(), NULL);
+    lv_obj_set_pos(btn, 10, 10);
+    lv_obj_set_size(btn, 120, 50);
+    lv_obj_set_event_cb(btn, btn_event_cb);
+
+    lv_obj_t *btn_label = lv_label_create(btn, NULL);
+    lv_label_set_text(btn_label, "Button");
+
+    lv_obj_t *label = lv_label_create(lv_scr_act(), NULL);
+    lv_label_set_text(label, "RT-Smart i.MX6ULL"); 
+
+    lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 10);
+    lv_obj_align(btn, label, LV_ALIGN_OUT_TOP_MID, 0, -10);
+}
+#endif //#ifdef RT_USING_LVGL
+
+void display_entry( void * parameter )
+{
+    rt_device_t display_dev;
+    rt_device_t touch_dev;
+
+    rt_memset(&_g_touch_data, 0x00, sizeof(struct skt_touch_data));
+
+    display_dev= rt_device_find("lcd");
+    if (!display_dev)
+    {
+        LOG_W("not find device[%s]", "lcd");
+        return;
+    }
+    rt_device_open(display_dev, RT_DEVICE_OFLAG_RDWR);
+    rt_device_control(display_dev, FBIOGET_VSCREENINFO, &_g_lcd_info);
+
+    touch_dev= rt_device_find("gt9147");
+    if (!touch_dev)
+    {
+        LOG_W("not find device[%s]", "gt9147");
+        return;
+    }
+    rt_device_open(touch_dev, RT_DEVICE_FLAG_RDONLY);
+
+#ifdef RT_USING_LVGL
+    lv_init();
+    lv_port_disp_init();
+    lv_port_indev_init();
+
+    lvgl_first_demo_start();
+#endif
 
     while (1)
     {
-        if (_g_gt9147_flag & GT_FLAG_NEW_DATA) {
-            rt_device_read(gt9147_dev, 0, RT_NULL, 0);
+        if (_g_gt9147_flag & GT_FLAG_NEW_DATA)
+        {
+            _g_gt9147_flag &= ~GT_FLAG_NEW_DATA;
+            rt_device_read(touch_dev, 0, &_g_touch_data, sizeof(struct skt_touch_data));
         }
-        rt_thread_mdelay(100);
+
+#ifdef RT_USING_LVGL
+        lv_task_handler();
+#endif
+
+        rt_thread_mdelay(10); //used to active schedule!
     }
 
     /* Never Run to Here! */
-    rt_device_close(gt9147_dev);
+    rt_device_close(display_dev);
+    rt_device_close(touch_dev);
 }
 
 static void _self_test( void )
 {
     rt_device_t icm20608_dev;
     rt_device_t pcf8574x_dev;
-    rt_device_t lcd_dev;
     rt_device_t pin_dev;
-    rt_thread_t touch_thread;
+    rt_thread_t display_thread;
 
     rt_uint8_t dummy_data[16];
 
@@ -94,14 +163,6 @@ static void _self_test( void )
     rt_device_write(pcf8574x_dev, 16, "2020-01-17", strlen("2020-01-17"));
 #endif
 
-#ifdef RT_FUNC_SELF_TEST_LCD_DEV
-    lcd_dev= rt_device_find("clcd");
-    rt_device_open(lcd_dev, RT_DEVICE_OFLAG_RDWR);
-    rt_device_control(lcd_dev, FBIOGET_VSCREENINFO, &_g_lcd_info);
-    rt_device_write(lcd_dev, 0, "hello-world\n", strlen("hello-world\n"));
-    rt_device_write(lcd_dev, 16, "2020-01-17\n", strlen("2020-01-17\n"));
-#endif
-
 #ifdef RT_FUNC_SELF_TEST_PIN_DEV
     struct rt_device_pin_mode pin_mode;
     struct rt_device_pin_status pin_status;
@@ -115,14 +176,14 @@ static void _self_test( void )
     rt_device_control(pin_dev, 0, &pin_mode);
 #endif
 
-#ifdef RT_FUNC_SELF_TEST_TOUCH_DEV
-    touch_thread = rt_thread_create( "touch", 
-                                     touch_entry, 
-                                     RT_NULL,
-                                     1024,
-                                     10, 20 );
-    if (RT_NULL != touch_thread ){
-        rt_thread_startup(touch_thread);
+#ifdef RT_FUNC_SELF_TEST_LVGL_DEV
+    display_thread = rt_thread_create( "display", 
+                                       display_entry, 
+                                       RT_NULL,
+                                       4096,
+                                       10, 20 );
+    if (RT_NULL != display_thread ){
+        rt_thread_startup(display_thread);
     }
 #endif
 
@@ -140,10 +201,9 @@ static void _self_test( void )
     /* Never Run to Here! */
     rt_device_close(icm20608_dev);
     rt_device_close(pcf8574x_dev);
-    rt_device_close(lcd_dev);
     rt_device_close(pin_dev);
-    if (RT_NULL != touch_thread ){
-        rt_thread_delete(touch_thread);
+    if (RT_NULL != display_thread ){
+        rt_thread_delete(display_thread);
     }
 }
 #endif //#ifdef RT_FUNC_SELF_TEST

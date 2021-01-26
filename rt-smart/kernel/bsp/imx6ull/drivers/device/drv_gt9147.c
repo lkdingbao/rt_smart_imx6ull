@@ -11,6 +11,8 @@
 #include <rthw.h>
 #include <rtdevice.h>
 
+#ifdef RT_USING_GT7147
+
 #include <board.h>
 #include <lwp.h>
 #include <lwp_user_mm.h>
@@ -23,7 +25,7 @@
 #include "skt.h"
 
 #define DBG_TAG "GT9147"
-#define DBG_LVL DBG_LOG
+#define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 
 #define _DEVICE_NAME        "gt9147"
@@ -33,7 +35,7 @@
 #define _BUS_I2C_ADDR       0x14
 
 /* GT9174 only support 5 touch points! */
-#define _TOUCH_POINT_NUM    5
+#define _TOUCH_POINT_NUM    TOUCH_POINT_NUM
 
 #define INT_PIN         GET_PIN(0,9)
 #define RST_PIN         GET_PIN(4,9)
@@ -53,9 +55,7 @@ _internal_rw struct skt_irq _s_gpio_irq_info =
 };
 
 _internal_rw struct rt_device _s_gt9147_device;
-
-_internal_rw rt_uint8_t _s_gt9147_tpnum = 0;
-_internal_rw struct TouchPointData _s_gt9147_tpdata[_TOUCH_POINT_NUM];
+_internal_rw struct skt_touch_data _s_gt9147_tpdata;
 
 /*
  * GT9147 Configuration
@@ -151,32 +151,32 @@ static rt_err_t _get_touchdata( rt_device_t dev )
 
     _write_one_data(dev, GT_RESULT_REG, 0x00);
 
-    _s_gt9147_tpnum = tpnum;
-
-    if (0 == _s_gt9147_tpnum) {
+    if (0 == tpnum) {
         return -RT_EEMPTY; //must clear GT_RESULT_REG register before return!
     }
+
+    _s_gt9147_tpdata.num = tpnum;
+    _s_gt9147_tpdata.flag |= GT_FLAG_NEW_DATA;
 
     for (int i=0; i<_TOUCH_POINT_NUM; i++)
     {
         _read_data(dev, GT_TP1_REG+(8*i), dummy, 4);
 
-        _s_gt9147_tpdata[i].xPos = (dummy[1]<<8) | dummy[0];
-        _s_gt9147_tpdata[i].yPos = (dummy[3]<<8) | dummy[2];
-        _s_gt9147_tpdata[i].flag = 1;
+        _s_gt9147_tpdata.x[i] = (dummy[1]<<8) | dummy[0];
+        _s_gt9147_tpdata.y[i] = (dummy[3]<<8) | dummy[2];
     }
 
-    LOG_D("tpnum: %02X", _s_gt9147_tpnum);
-    LOG_D("x_pos: %d %d %d %d %d", _s_gt9147_tpdata[0].xPos,
-                                   _s_gt9147_tpdata[1].xPos,
-                                   _s_gt9147_tpdata[2].xPos,
-                                   _s_gt9147_tpdata[3].xPos,
-                                   _s_gt9147_tpdata[4].xPos );
-    LOG_D("y_pos: %d %d %d %d %d", _s_gt9147_tpdata[0].yPos,
-                                   _s_gt9147_tpdata[1].yPos,
-                                   _s_gt9147_tpdata[2].yPos,
-                                   _s_gt9147_tpdata[3].yPos,
-                                   _s_gt9147_tpdata[4].yPos );
+    LOG_D("tpnum: %02X", _s_gt9147_tpdata.num);
+    LOG_D("x_pos: %d %d %d %d %d", _s_gt9147_tpdata.x[0],
+                                   _s_gt9147_tpdata.x[1],
+                                   _s_gt9147_tpdata.x[2],
+                                   _s_gt9147_tpdata.x[3],
+                                   _s_gt9147_tpdata.x[4]);
+    LOG_D("y_pos: %d %d %d %d %d", _s_gt9147_tpdata.y[0],
+                                   _s_gt9147_tpdata.y[1],
+                                   _s_gt9147_tpdata.y[2],
+                                   _s_gt9147_tpdata.y[3],
+                                   _s_gt9147_tpdata.y[4] );
 
     return RT_EOK;
 }
@@ -204,7 +204,7 @@ static void _gt9147_int_isr( int irqno, void* parameter )
 
     rt_interrupt_enter();
 
-    _g_gt9147_flag = GT_FLAG_NEW_DATA;
+    _g_gt9147_flag |= GT_FLAG_NEW_DATA;
     GPIO_ClearPinsInterruptFlags((GPIO_Type*)irq->periph.vaddr, (1 << irq->pin));
 
     rt_interrupt_leave();
@@ -362,14 +362,20 @@ static rt_size_t _gt9147_ops_read( rt_device_t dev,
                                    rt_size_t size )
 {
     struct rt_i2c_bus_device *bus = RT_NULL;
+    struct skt_touch_data *pdata = RT_NULL;
 
     RT_ASSERT(RT_NULL != dev);
     RT_ASSERT(RT_NULL != dev->user_data);
+
+    RT_ASSERT(sizeof(struct skt_touch_data) == size);
+    pdata = (struct skt_touch_data*)buffer;
 
     bus = (struct rt_i2c_bus_device*)(dev->user_data);
 
     _get_touchdata((rt_device_t)bus);
     _g_gt9147_flag &= ~GT_FLAG_NEW_DATA;
+
+    rt_memcpy(pdata, &_s_gt9147_tpdata, sizeof(struct skt_touch_data));
 
     return RT_EOK;
 }
@@ -389,6 +395,9 @@ _internal_ro struct rt_device_ops _k_gt9147_ops =
 int rt_hw_gt9147_init(void)
 {
     struct rt_device *device = RT_NULL;
+
+    rt_memset(&_s_gt9147_tpdata, 0x00, sizeof(struct skt_touch_data));
+    _s_gt9147_tpdata.max = _TOUCH_POINT_NUM;
 
     rt_memset(&_s_gt9147_device, 0x00, sizeof(_s_gt9147_device));
     device = &_s_gt9147_device;
@@ -414,3 +423,4 @@ int rt_hw_gt9147_init(void)
 }
 INIT_COMPONENT_EXPORT(rt_hw_gt9147_init);
 
+#endif //#ifdef RT_USING_GT7147

@@ -13,13 +13,7 @@
 #include "rt_lcd.h"
 #include "skt.h"
 
-#ifndef BSP_LCD_WIDTH
-#define BSP_LCD_WIDTH                       800
-#endif
-
-#ifndef BSP_LCD_HEIGHT
-#define BSP_LCD_HEIGHT                      480
-#endif
+#ifdef RT_USING_RGBLCD
 
 #define RGB_COLOR_BLUE                      0x000000FF
 #define RGB_COLOR_GREEN                     0x0000FF00
@@ -49,5 +43,6 @@
 #define RGB_COLOR_TRANSPARENT               0x00000000
 #define RGB_COLOR_PURPLE                    0x00800080
 
+#endif //#ifdef RT_USING_RGBLCD
 #endif //#ifndef __DRV_LCD_H__
 

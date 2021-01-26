@@ -8,8 +8,6 @@
 
 #define RT_NAME_MAX 8
 #define RT_USING_SMART
-// #define RT_USING_SMP
-// #define RT_CPUS_NR 2
 #define RT_ALIGN_SIZE 4
 #define RT_THREAD_PRIORITY_32
 #define RT_THREAD_PRIORITY_MAX 32
@@ -51,15 +49,15 @@
 #define RT_CONSOLEBUF_SIZE 256
 #define RT_CONSOLE_DEVICE_NAME "uart1"
 #define RT_VER_NUM 0x40003
+#define RT_USING_CACHE
 #define ARCH_ARM
 #define ARCH_ARM_MMU
 #define RT_USING_USERSPACE
 #define KERNEL_VADDR_START 0xc0000000
 #define PV_OFFSET 0xc0000000
 #define ARCH_ARM_CORTEX_A
-#define ARCH_ARM_CORTEX_A9
+#define ARCH_ARM_CORTEX_A7
 #define RT_BACKTRACE_FUNCTION_NAME
-#define RT_USING_CACHE
 
 /* RT-Thread Components */
 
@@ -272,47 +270,47 @@
 /* samples: kernel and components samples */
 
 
-/* Privated Packages of RealThread */
-
-
-/* Network Utilities */
+/* Platform Configuration */
 
 #define SOC_CPU_MCIMX6Y2CVM05
 
+/* Platform Driver Configuration */
+
+/* Select UART Driver */
+
 #define RT_USING_UART
 #define BSP_USING_UART1
-//#define BSP_USING_UART2
-//#define BSP_USING_UART3
-//#define BSP_USING_UART4
-//#define BSP_USING_UART5
-//#define BSP_USING_UART6
-//#define BSP_USING_UART7
-//#define BSP_USING_UART8
+
+/* Select SPI Driver */
+
+#define BSP_USING_SPI3
+#define BSP_USING_SPI4
+
+/* Select I2C Driver */
+
+#define BSP_USING_I2C2
+
+/* Select LCD Driver */
 
 #define RT_USING_RGBLCD
-#define BSP_LCD_WIDTH   800
-#define BSP_LCD_HEIGHT  480
+#define BSP_LCD_WIDTH 800
+#define BSP_LCD_HEIGHT 480
 
-#define RT_USING_SPI
-//#define BSP_USING_SPI1
-//#define BSP_USING_SPI2
-#define BSP_USING_SPI3
-//#define BSP_USING_SPI4
+/* Platform Device Configuration */
 
-#define RT_USING_I2C
-//#define BSP_USING_I2C1
-#define BSP_USING_I2C2
-//#define BSP_USING_I2C3
-//#define BSP_USING_I2C4
+#define RT_USING_GT7147
+#define TOUCH_POINT_NUM 5
+#define RT_USING_ICM20608
+#define RT_USING_PCF8574
+
+/* Third-party Libraries Configuration */
+
+#define RT_USING_LVGL
+
+/* Program Self Test Code */
 
 #define RT_FUNC_SELF_TEST
-//#define RT_FUNC_SELF_TEST_I2C_DEV
-//#define RT_FUNC_SELF_TEST_SPI_DEV
-//#define RT_FUNC_SELF_TEST_LCD_DEV
 #define RT_FUNC_SELF_TEST_PIN_DEV
-#define RT_FUNC_SELF_TEST_TOUCH_DEV
-
-#define RT_LCD_CONSOLE_DEBUG
-#define RT_LCD_CONSOLE_PARSER
+#define RT_FUNC_SELF_TEST_LVGL_DEV
 
 #endif

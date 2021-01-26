@@ -10,6 +10,10 @@
 #ifndef __DRV_I2C_H__
 #define __DRV_I2C_H__
 
+#include "skt.h"
+
+#ifdef RT_USING_I2C
+
 #ifndef HW_SYS_I2C_CLOCK
 #define HW_SYS_I2C_CLOCK                (68000000U)
 #endif
@@ -24,5 +28,6 @@
 rt_err_t drv_i2c_bus_register( rt_uint32_t i2c_periph,
                                const char *i2c_bus_name );
 
+#endif //#ifdef RT_USING_I2C
 #endif //#ifndef __DRV_I2C_H__
 

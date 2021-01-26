@@ -10,7 +10,9 @@
 #ifndef __DRV_ICM20608_H__
 #define __DRV_ICM20608_H__
 
-#include <board.h>
+#include "skt.h"
+
+#ifdef RT_USING_ICM20608
 
 /* Gyroscope static offset */
 #define ICM20_XG_OFFS_USRH          0x13
@@ -71,5 +73,6 @@
 #define ICM20_ZA_OFFSET_H           0x7D
 #define ICM20_ZA_OFFSET_L           0x7E
 
+#endif //#ifdef RT_USING_ICM20608
 #endif //#ifndef __DRV_ICM20608_H__
 

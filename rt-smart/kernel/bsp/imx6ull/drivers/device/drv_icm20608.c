@@ -11,6 +11,8 @@
 #include <rthw.h>
 #include <rtdevice.h>
 
+#ifdef RT_USING_ICM20608
+
 #include <board.h>
 #include <lwp.h>
 #include <lwp_user_mm.h>
@@ -125,3 +127,4 @@ int rt_hw_icm20806_init(void)
 }
 INIT_COMPONENT_EXPORT(rt_hw_icm20806_init);
 
+#endif //#ifdef RT_USING_ICM20608

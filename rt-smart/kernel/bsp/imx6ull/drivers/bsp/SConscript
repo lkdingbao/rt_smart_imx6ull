@@ -6,6 +6,9 @@ list = os.listdir(cwd)
 CPPPATH = [cwd]
 objs = []
 
+if not GetDepend('RT_USING_RGBLCD'):
+    SrcRemove(src, ['bsp_lcdapi.c'])
+
 group = DefineGroup('Bsp', src, depend = [''], CPPPATH = CPPPATH)
 
 for d in list:

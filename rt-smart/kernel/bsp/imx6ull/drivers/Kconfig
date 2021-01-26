@@ -1,0 +1,2 @@
+source "$BSP_DIR/drivers/driver/Kconfig"
+source "$BSP_DIR/drivers/device/Kconfig"
