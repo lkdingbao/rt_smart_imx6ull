@@ -61,6 +61,9 @@ device->bus->owner = device;
 |**设备**|||
 |ICM20608|√||
 |PCF8574x|√||
+|GT9147|√||
+|**第三方库**|||
+|LittlevGL|√|Ver 7.9.1|
 
 ### 三、测试
 
