@@ -111,8 +111,13 @@ static bool touchpad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
 static bool touchpad_is_pressed(void)
 {
     /*Your code comes here*/
-
-    return (_g_touch_data.flag) ? true : false;
+    if (_g_touch_data.flag)
+    {
+        _g_touch_data.flag = 0;
+        return true;
+    } else {
+        return false;
+    }
 }
 
 /*Get the x and y coordinates if the touchpad is pressed*/

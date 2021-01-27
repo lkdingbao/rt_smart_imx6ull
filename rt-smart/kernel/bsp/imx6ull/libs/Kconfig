@@ -6,8 +6,10 @@ config RT_USING_LVGL
 
     if RT_USING_LVGL
         config BSP_USING_LVGL_GPU
-            bool "Enable LittlevGL GPU"
+            bool "Enable littlevGL GPU"
             default n
+        config BSP_USING_LVGL_EXAMPLE
+            bool "Using littlevGL examples"
     endif
 
 endmenu

@@ -69,7 +69,7 @@ static void _sys_counter_isr(int vector, void *param)
     rt_tick_increase();
 
 #ifdef RT_USING_LVGL
-    lv_tick_inc(SYS_COUNTER_TICK_PERIOD);
+    lv_tick_inc(1000/RT_TICK_PER_SECOND);
 #endif
 
     /* set next irq */

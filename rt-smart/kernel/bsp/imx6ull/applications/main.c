@@ -18,6 +18,7 @@
 #include "rt_lcd.h"
 #ifdef RT_USING_LVGL
 #include "lvgl.h"
+#include "lv_examples.h"
 #endif
 
 #define DBG_TAG "main"
@@ -55,36 +56,6 @@ int main(void)
 }
 
 #ifdef RT_FUNC_SELF_TEST
-#ifdef RT_USING_LVGL
-static void btn_event_cb(lv_obj_t * btn, lv_event_t event)
-{
-    static uint8_t _btn_cnt = 0;
-
-    if (event == LV_EVENT_PRESSED) 
-    {
-        lv_obj_t *label = lv_obj_get_child(btn, NULL);
-        lv_label_set_text_fmt(label, "Button: %d", ++_btn_cnt);
-    }
-}
-
-static void lvgl_first_demo_start(void)
-{
-    lv_obj_t *btn = lv_btn_create(lv_scr_act(), NULL);
-    lv_obj_set_pos(btn, 10, 10);
-    lv_obj_set_size(btn, 120, 50);
-    lv_obj_set_event_cb(btn, btn_event_cb);
-
-    lv_obj_t *btn_label = lv_label_create(btn, NULL);
-    lv_label_set_text(btn_label, "Button");
-
-    lv_obj_t *label = lv_label_create(lv_scr_act(), NULL);
-    lv_label_set_text(label, "RT-Smart i.MX6ULL"); 
-
-    lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 10);
-    lv_obj_align(btn, label, LV_ALIGN_OUT_TOP_MID, 0, -10);
-}
-#endif //#ifdef RT_USING_LVGL
-
 void display_entry( void * parameter )
 {
     rt_device_t display_dev;
@@ -114,7 +85,7 @@ void display_entry( void * parameter )
     lv_port_disp_init();
     lv_port_indev_init();
 
-    lvgl_first_demo_start();
+    lv_demo_widgets();
 #endif
 
     while (1)
@@ -180,8 +151,8 @@ static void _self_test( void )
     display_thread = rt_thread_create( "display", 
                                        display_entry, 
                                        RT_NULL,
-                                       4096,
-                                       10, 20 );
+                                       8096,
+                                       10, 100 );
     if (RT_NULL != display_thread ){
         rt_thread_startup(display_thread);
     }

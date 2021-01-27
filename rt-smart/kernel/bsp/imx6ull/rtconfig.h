@@ -306,6 +306,7 @@
 /* Third-party Libraries Configuration */
 
 #define RT_USING_LVGL
+#define BSP_USING_LVGL_EXAMPLE
 
 /* Program Self Test Code */
 

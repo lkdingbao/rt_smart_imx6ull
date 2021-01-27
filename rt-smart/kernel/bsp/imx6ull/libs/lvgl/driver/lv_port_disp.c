@@ -76,9 +76,9 @@ void lv_port_disp_init(void)
      * */
 
     static lv_disp_buf_t draw_buf;
-    static uint32_t frame_swap_buf[LV_HOR_RES_MAX*LV_VER_RES_MAX];
+    static uint32_t frame_swap_buf[2][LV_HOR_RES_MAX*LV_VER_RES_MAX];
 
-    lv_disp_buf_init(&draw_buf, frame_swap_buf, NULL, LV_HOR_RES_MAX*LV_VER_RES_MAX);
+    lv_disp_buf_init(&draw_buf, &frame_swap_buf[0], &frame_swap_buf[1], LV_HOR_RES_MAX*LV_VER_RES_MAX);
 
     /*-----------------------------------
      * Register the display in LVGL
