@@ -23,5 +23,8 @@ void gpio_set_mode(GPIO_Type *port, rt_uint32_t pin, const gpio_pin_config_t* cf
 void gpio_write(GPIO_Type *port, rt_uint32_t pin, rt_uint32_t lvl);
 rt_uint32_t gpio_read(GPIO_Type *port, rt_uint32_t pin);
 
+void gpio_easy_set_output_mode(rt_uint32_t pin);
+void gpio_easy_write(rt_uint32_t lvl);
+
 #endif //#ifndef __BSP_GPIO_H__
  

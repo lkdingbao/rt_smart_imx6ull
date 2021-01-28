@@ -14,7 +14,7 @@ config RT_USING_GT7147
 config RT_USING_ICM20608
     bool "Enable ICM20608"
     select RT_USING_SPI
-    default y
+    default n
 
 config RT_USING_PCF8574
     bool "Enable PCF8574"

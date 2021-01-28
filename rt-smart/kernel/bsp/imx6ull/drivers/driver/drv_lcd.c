@@ -30,19 +30,25 @@
 #define DBG_LVL DBG_LOG
 #include <rtdbg.h>
 
+#define _LCD_WIDTH                  BSP_LCD_WIDTH
+#define _LCD_HEIGHT                 BSP_LCD_HEIGHT
+
 #if ( defined (RT_LCD_CONSOLE_DEBUG)  \
    && defined (RT_LCD_CONSOLE_PARSER) )
-#define _PARSER_FLAG_ANALYSE       (1 << 0)
-#define _PARSER_FLAG_FINISH        (1 << 1)
+#define _PARSER_FLAG_ANALYSE        (1 << 0)
+#define _PARSER_FLAG_FINISH         (1 << 1)
 #endif
 
 _internal_rw struct skt_lcd _s_lcd =
 {
     .name = "lcd",
-    .periph.paddr = REALVIEW_CLCD_BASE,
+    .periph = {
+        {.paddr = REALVIEW_CLCD_BASE,},
+        {.paddr = REALVIEW_SDMA_BASE,},
+    },
     .info = {
-        .width  = BSP_LCD_WIDTH,
-        .height = BSP_LCD_HEIGHT,
+        .width  = _LCD_WIDTH,
+        .height = _LCD_HEIGHT,
         .pxsz   = 4,
 
         .hsw  = 3,
@@ -120,6 +126,12 @@ _internal_ro rt_uint32_t _k_console_color_tbl[] =
 };
 #endif
 
+#ifdef RT_LCD_DMA_ENABLE
+_internal_rw ALIGN(4) sdma_context_data_t _s_sdma_context = {0};
+_internal_rw ALIGN(4) sdma_handle_t _s_sdma_handle = {0};
+_internal_rw volatile bool _s_sdma_transfer_done = false;
+#endif
+
 static rt_uint32_t _lcd_read_point( rt_uint16_t x, rt_uint16_t y )
 {
     rt_uint32_t *fbpoint = (rt_uint32_t*)_s_lcd.info.fb_virt;
@@ -194,7 +206,7 @@ static void _lcd_periph_init( struct skt_lcd *device )
     elcdif_rgb_mode_config_t config;
 
     RT_ASSERT(RT_NULL != device);
-    periph = (LCDIF_Type*)device->periph.vaddr;
+    periph = (LCDIF_Type*)device->periph[0].vaddr;
 
     CLOCK_EnableClock(kCLOCK_Lcd);
     CLOCK_EnableClock(kCLOCK_Lcdif1);
@@ -498,6 +510,50 @@ _internal_ro struct rt_device_ops _k_lcd_ops =
 };
 #endif
 
+#ifdef RT_LCD_DMA_ENABLE
+static void _lcd_dma_callback( sdma_handle_t *handle, void *param, bool transferDone, uint32_t bds )
+{
+    LOG_D("dma finished");
+    if (transferDone)
+    {
+        _s_sdma_transfer_done = true;
+    }
+}
+
+void lcd_fill(rt_uint32_t src_addr)
+{
+    SDMAARM_Type *periph = RT_NULL;
+    sdma_transfer_config_t transferConfig;
+    sdma_config_t userConfig;
+
+    periph = (SDMAARM_Type*)_s_lcd.periph[1].vaddr;
+
+    /* Configure SDMA one shot transfer */
+    SDMA_GetDefaultConfig(&userConfig);
+    SDMA_Init(periph, &userConfig);
+
+    LOG_D("dma from %08X to %08X", src_addr, _s_lcd.info.fb_virt);
+
+    SDMA_CreateHandle(&_s_sdma_handle, periph, 1, &_s_sdma_context);
+    SDMA_SetCallback(&_s_sdma_handle, _lcd_dma_callback, NULL);
+    SDMA_PrepareTransfer( &transferConfig,
+                          src_addr, _s_lcd.info.fb_virt,
+                          _s_lcd.info.pxsz, _s_lcd.info.pxsz,
+                          _s_lcd.info.pxsz,
+                          _s_lcd.info.width*_s_lcd.info.height*_s_lcd.info.pxsz,
+                          0,
+                          kSDMA_PeripheralTypeMemory,
+                          kSDMA_MemoryToMemory);
+    SDMA_SubmitTransfer(&_s_sdma_handle, &transferConfig);
+    SDMA_SetChannelPriority(periph, 1, 2U);
+
+    SDMA_StartTransfer(&_s_sdma_handle);
+
+    /* Wait for SDMA transfer finish */
+    while (_s_sdma_transfer_done != true);
+}
+#endif //#ifdef RT_LCD_DMA_ENABLE
+
 int rt_hw_lcd_init(void)
 {
     struct rt_device *device = RT_NULL;
@@ -520,7 +576,9 @@ int rt_hw_lcd_init(void)
 
     rt_device_register(device, _s_lcd.name, RT_DEVICE_FLAG_RDWR);
 
-    _s_lcd.periph.vaddr = platform_get_periph_vaddr(_s_lcd.periph.paddr);
+    for (int i=0; i<GET_ARRAY_NUM(_s_lcd.periph); i++) {
+        _s_lcd.periph[i].vaddr = platform_get_periph_vaddr(_s_lcd.periph[i].paddr);
+    }
 
     fb_size = _s_lcd.info.width * _s_lcd.info.height * _s_lcd.info.pxsz;
 #ifdef RT_USING_USERSPACE

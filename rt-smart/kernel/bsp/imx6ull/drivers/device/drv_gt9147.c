@@ -37,6 +37,9 @@
 /* GT9174 only support 5 touch points! */
 #define _TOUCH_POINT_NUM    TOUCH_POINT_NUM
 
+#define _TOUCH_WIDTH        BSP_LCD_WIDTH
+#define _TOUCH_HEIGHT       BSP_LCD_HEIGHT
+
 #define INT_PIN         GET_PIN(0,9)
 #define RST_PIN         GET_PIN(4,9)
 _internal_ro struct skt_gpio _k_gpio_info[] = 
@@ -65,7 +68,10 @@ _internal_rw struct skt_touch_data _s_gt9147_tpdata;
  */
 _internal_ro rt_uint8_t _s_gt9147_init_tbl[] = 
 {
-    0x46,0x0E,0x01,0x10,0x01,0x05,0x0D,0x00,0x01,0x08,
+    0x46,
+    (_TOUCH_WIDTH  & 0x00FF),((_TOUCH_WIDTH  >> 8) & 0x00FF),
+    (_TOUCH_HEIGHT & 0x00FF),((_TOUCH_HEIGHT >> 8) & 0x00FF),
+    0x05,0x0D,0x00,0x01,0x08,
     0x28,0x05,0x50,0x32,0x03,0x05,0x00,0x00,0xFF,0xFF,
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x89,0x28,0x0A,
     0x17,0x15,0x31,0x0D,0x00,0x00,0x02,0x9B,0x03,0x25,
@@ -337,6 +343,8 @@ static rt_err_t _gt9147_ops_open( rt_device_t dev,
 
         rt_hw_interrupt_install(_s_gpio_irq_info.irqno, _gt9147_int_isr, &_s_gpio_irq_info, _s_gpio_irq_info.name);
         rt_hw_interrupt_umask(_s_gpio_irq_info.irqno);
+
+        _g_gt9147_flag = 0; //must clear here!
     }
 
     return RT_EOK;
@@ -373,9 +381,11 @@ static rt_size_t _gt9147_ops_read( rt_device_t dev,
     bus = (struct rt_i2c_bus_device*)(dev->user_data);
 
     _get_touchdata((rt_device_t)bus);
-    _g_gt9147_flag &= ~GT_FLAG_NEW_DATA;
-
-    rt_memcpy(pdata, &_s_gt9147_tpdata, sizeof(struct skt_touch_data));
+    if (_s_gt9147_tpdata.flag & GT_FLAG_NEW_DATA) 
+    {
+        rt_memcpy(pdata, &_s_gt9147_tpdata, sizeof(struct skt_touch_data));
+        _s_gt9147_tpdata.flag &= ~GT_FLAG_NEW_DATA; //read first, clear after!
+    }
 
     return RT_EOK;
 }

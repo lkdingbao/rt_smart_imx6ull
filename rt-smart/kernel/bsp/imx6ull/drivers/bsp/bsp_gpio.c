@@ -18,6 +18,9 @@
 
 #define _P2V(pa)                    platform_get_periph_vaddr((pa))
 
+_internal_rw rt_uint32_t _s_gpio_last_vaddr = 0;
+_internal_rw rt_uint32_t _s_gpio_last_pin = 0;
+
 void gpio_set_iomux(const struct skt_gpio *gpio)
 {
     rt_uint32_t v[3];
@@ -108,5 +111,29 @@ rt_uint32_t gpio_read(GPIO_Type *port, rt_uint32_t pin)
     RT_ASSERT(pin < 32);
 
     return ((port->PSR >> pin) & 0x1);
+}
+
+void gpio_easy_set_output_mode(rt_uint32_t pin)
+{
+    gpio_pin_config_t config;
+    rt_uint32_t paddr, vaddr;
+    rt_uint8_t port_num, pin_num;
+
+    port_num = GET_PORT_FIELD(pin);
+    pin_num = GET_PIN_FIELD(pin);
+
+    config.direction = kGPIO_DigitalOutput;
+    paddr = GET_GPIO_BASE_ADDR(port_num);
+    vaddr = platform_get_periph_vaddr((rt_uint32_t)paddr);
+    gpio_set_mode((GPIO_Type*)vaddr, pin_num, &config);
+
+    _s_gpio_last_vaddr = vaddr;
+    _s_gpio_last_pin = pin_num;
+}
+
+void gpio_easy_write(rt_uint32_t lvl)
+{
+    /* no need to check! is only for test! */
+    gpio_write((GPIO_Type*)_s_gpio_last_vaddr, _s_gpio_last_pin, lvl);
 }
 

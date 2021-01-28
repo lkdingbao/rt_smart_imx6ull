@@ -89,6 +89,10 @@ config RT_USING_RGBLCD
             int "Height of LCD panel"
             default 480
 
+        config RT_LCD_DMA_ENABLE
+            bool "Use DMA to transfer display data"
+            default n
+
         config RT_LCD_CONSOLE_DEBUG
             bool "Use LCD as console device"
             default n

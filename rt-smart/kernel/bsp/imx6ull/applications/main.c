@@ -12,10 +12,11 @@
 #include <lwp.h>
 
 #include "__def.h"
-#include "drv_pin.h"
-#include "drv_gt9147.h"
+#include "bsp_gpio.h"
 #include "bsp_lcdapi.h"
 #include "rt_lcd.h"
+#include "drv_pin.h"
+#include "drv_gt9147.h"
 #ifdef RT_USING_LVGL
 #include "lvgl.h"
 #include "lv_examples.h"
@@ -26,6 +27,7 @@
 #include <rtdbg.h>
 
 #define LED_PIN                 GET_PIN(0,3)
+#define TEST_PIN                GET_PIN(0,20)
 
 struct skt_touch_data _g_touch_data;
 
@@ -80,6 +82,9 @@ void display_entry( void * parameter )
     }
     rt_device_open(touch_dev, RT_DEVICE_FLAG_RDONLY);
 
+    gpio_easy_set_output_mode(TEST_PIN);
+    gpio_easy_write(0);
+
 #ifdef RT_USING_LVGL
     lv_init();
     lv_port_disp_init();
@@ -92,15 +97,17 @@ void display_entry( void * parameter )
     {
         if (_g_gt9147_flag & GT_FLAG_NEW_DATA)
         {
+            rt_device_read(touch_dev, 0, &_g_touch_data, sizeof(struct skt_touch_data)); //1ms/2ms/5ms
             _g_gt9147_flag &= ~GT_FLAG_NEW_DATA;
-            rt_device_read(touch_dev, 0, &_g_touch_data, sizeof(struct skt_touch_data));
         }
 
 #ifdef RT_USING_LVGL
+        gpio_easy_write(1);
         lv_task_handler();
+        gpio_easy_write(0);
 #endif
 
-        rt_thread_mdelay(10); //used to active schedule!
+        rt_thread_mdelay(1000/RT_TICK_PER_SECOND); //used to active schedule!
     }
 
     /* Never Run to Here! */

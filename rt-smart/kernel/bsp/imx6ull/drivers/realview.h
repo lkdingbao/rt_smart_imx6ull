@@ -78,6 +78,8 @@
 #define REALVIEW_I2C3_BASE          I2C3_BASE
 #define REALVIEW_I2C4_BASE          I2C4_BASE
 
+#define REALVIEW_SDMA_BASE          SDMAARM_BASE
+
 #include <rtdef.h>
 #include <armv7.h>
 

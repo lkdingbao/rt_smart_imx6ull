@@ -113,6 +113,7 @@ static bool touchpad_is_pressed(void)
     /*Your code comes here*/
     if (_g_touch_data.flag)
     {
+//        rt_kprintf("indev\n");
         _g_touch_data.flag = 0;
         return true;
     } else {

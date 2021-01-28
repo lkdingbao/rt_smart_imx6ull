@@ -18,6 +18,7 @@
 #include "fsl_ecspi.h"
 #include "fsl_i2c.h"
 #include "fsl_elcdif.h"
+#include "fsl_sdma.h"
 
 #endif //#ifndef __IMX6ULL_COMMON_H__
 

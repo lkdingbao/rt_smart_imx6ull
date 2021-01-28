@@ -300,7 +300,6 @@
 
 #define RT_USING_GT7147
 #define TOUCH_POINT_NUM 5
-#define RT_USING_ICM20608
 #define RT_USING_PCF8574
 
 /* Third-party Libraries Configuration */

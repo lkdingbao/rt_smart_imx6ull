@@ -15,6 +15,7 @@
 
 extern struct skt_lcd_info _g_lcd_info;
 
+void lcd_fill(rt_uint32_t addr);
 void lcd_show_char( rt_uint16_t x, rt_uint16_t y, rt_uint8_t sz, char c );
 void lcd_show_string( rt_uint16_t x, rt_uint16_t y, rt_uint8_t sz, char *p );
 

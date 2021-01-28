@@ -111,7 +111,7 @@ struct skt_lcd
     struct rt_device            parent;
 
     const char                  *name;
-    struct skt_periph           periph;
+    struct skt_periph           periph[2];
 
     struct skt_lcd_info         info;
 
