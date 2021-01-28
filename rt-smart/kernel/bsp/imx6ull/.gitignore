@@ -43,3 +43,6 @@ cconfig.h
 .settings
 drivers/automac.h
 romfs.c
+
+*.DEBUG
+*.imx

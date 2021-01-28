@@ -27,7 +27,6 @@
 #include <rtdbg.h>
 
 #define LED_PIN                 GET_PIN(0,3)
-#define TEST_PIN                GET_PIN(0,20)
 
 struct skt_touch_data _g_touch_data;
 
@@ -82,9 +81,6 @@ void display_entry( void * parameter )
     }
     rt_device_open(touch_dev, RT_DEVICE_FLAG_RDONLY);
 
-    gpio_easy_set_output_mode(TEST_PIN);
-    gpio_easy_write(0);
-
 #ifdef RT_USING_LVGL
     lv_init();
     lv_port_disp_init();
@@ -102,9 +98,7 @@ void display_entry( void * parameter )
         }
 
 #ifdef RT_USING_LVGL
-        gpio_easy_write(1);
         lv_task_handler();
-        gpio_easy_write(0);
 #endif
 
         rt_thread_mdelay(1000/RT_TICK_PER_SECOND); //used to active schedule!
@@ -158,7 +152,7 @@ static void _self_test( void )
     display_thread = rt_thread_create( "display", 
                                        display_entry, 
                                        RT_NULL,
-                                       8096,
+                                       4096,
                                        10, 100 );
     if (RT_NULL != display_thread ){
         rt_thread_startup(display_thread);

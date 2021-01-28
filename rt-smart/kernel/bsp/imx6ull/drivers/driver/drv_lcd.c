@@ -126,12 +126,6 @@ _internal_ro rt_uint32_t _k_console_color_tbl[] =
 };
 #endif
 
-#ifdef RT_LCD_DMA_ENABLE
-_internal_rw ALIGN(4) sdma_context_data_t _s_sdma_context = {0};
-_internal_rw ALIGN(4) sdma_handle_t _s_sdma_handle = {0};
-_internal_rw volatile bool _s_sdma_transfer_done = false;
-#endif
-
 static rt_uint32_t _lcd_read_point( rt_uint16_t x, rt_uint16_t y )
 {
     rt_uint32_t *fbpoint = (rt_uint32_t*)_s_lcd.info.fb_virt;
@@ -510,49 +504,10 @@ _internal_ro struct rt_device_ops _k_lcd_ops =
 };
 #endif
 
-#ifdef RT_LCD_DMA_ENABLE
-static void _lcd_dma_callback( sdma_handle_t *handle, void *param, bool transferDone, uint32_t bds )
+void lcd_fill(rt_uint32_t *src, rt_uint32_t *dest, rt_uint32_t num)
 {
-    LOG_D("dma finished");
-    if (transferDone)
-    {
-        _s_sdma_transfer_done = true;
-    }
+     rt_memcpy(dest, src, num); //fill 800¡Á480 need 250ms!
 }
-
-void lcd_fill(rt_uint32_t src_addr)
-{
-    SDMAARM_Type *periph = RT_NULL;
-    sdma_transfer_config_t transferConfig;
-    sdma_config_t userConfig;
-
-    periph = (SDMAARM_Type*)_s_lcd.periph[1].vaddr;
-
-    /* Configure SDMA one shot transfer */
-    SDMA_GetDefaultConfig(&userConfig);
-    SDMA_Init(periph, &userConfig);
-
-    LOG_D("dma from %08X to %08X", src_addr, _s_lcd.info.fb_virt);
-
-    SDMA_CreateHandle(&_s_sdma_handle, periph, 1, &_s_sdma_context);
-    SDMA_SetCallback(&_s_sdma_handle, _lcd_dma_callback, NULL);
-    SDMA_PrepareTransfer( &transferConfig,
-                          src_addr, _s_lcd.info.fb_virt,
-                          _s_lcd.info.pxsz, _s_lcd.info.pxsz,
-                          _s_lcd.info.pxsz,
-                          _s_lcd.info.width*_s_lcd.info.height*_s_lcd.info.pxsz,
-                          0,
-                          kSDMA_PeripheralTypeMemory,
-                          kSDMA_MemoryToMemory);
-    SDMA_SubmitTransfer(&_s_sdma_handle, &transferConfig);
-    SDMA_SetChannelPriority(periph, 1, 2U);
-
-    SDMA_StartTransfer(&_s_sdma_handle);
-
-    /* Wait for SDMA transfer finish */
-    while (_s_sdma_transfer_done != true);
-}
-#endif //#ifdef RT_LCD_DMA_ENABLE
 
 int rt_hw_lcd_init(void)
 {

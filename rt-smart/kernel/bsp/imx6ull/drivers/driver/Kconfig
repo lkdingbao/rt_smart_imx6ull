@@ -96,10 +96,12 @@ config RT_USING_RGBLCD
         config RT_LCD_CONSOLE_DEBUG
             bool "Use LCD as console device"
             default n
-
-        config RT_LCD_CONSOLE_PARSER
-            bool "Enable LCD console parser function"
-            default n
+            
+            if RT_LCD_CONSOLE_DEBUG
+                config RT_LCD_CONSOLE_PARSER
+                    bool "Enable LCD console parser function"
+                    default n
+            endif
     endif
 endmenu
 

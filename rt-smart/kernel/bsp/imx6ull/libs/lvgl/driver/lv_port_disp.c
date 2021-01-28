@@ -128,19 +128,7 @@ static void disp_init(void)
  * 'lv_disp_flush_ready()' has to be called when finished. */
 static void disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_color_t * color_p)
 {
-    uint32_t *framebuffer = (uint32_t*)_g_lcd_info.fb_virt;
-    int32_t x, y;
-
-    /*The most simple case (but also the slowest) to put all pixels to the screen one-by-one*/
-
-    for (y = area->y1; y <= area->y2; y++)
-    {
-        for (x = area->x1; x <= area->x2; x++)
-        {
-            framebuffer[y*_g_lcd_info.width + x] = color_p->full;
-            color_p++;
-        }
-    }
+    lcd_fill((uint32_t*)color_p, (uint32_t*)_g_lcd_info.fb_virt, _g_lcd_info.width*_g_lcd_info.height*_g_lcd_info.pxsz);
 
     /* IMPORTANT!!!
      * Inform the graphics library that you are ready with the flushing*/

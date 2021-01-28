@@ -45,7 +45,7 @@ void BOARD_BootClockRUN(void)
     CLOCK_SetXtalFreq(24000000U);
     CLOCK_SetRtcXtalFreq(32768U);
 
-   /*
+    /*
      * ARM_CLK from 'pll1_sw_clk', whitch from 'pll1_main_clk' or 'step_clk'
      * if edit 'pll1_main_clk', switch to 'step_clk' first
      */
@@ -114,18 +114,9 @@ void BOARD_BootClockRUN(void)
     reg_value |=  CCM_CSCMR1_PERCLK_PODF(0); //'CSCMR1[PERCLK_PODF]=0b000000' divide by 1
     CCM->CSCMR1 = reg_value;
 
-    /* Power down all unused PLL */
-    CLOCK_DeinitUsb2Pll();
-    CLOCK_DeinitAudioPll();
-    CLOCK_DeinitVideoPll();
-    CLOCK_DeinitEnetPll();
-
     /* Configure UART divider to default */
     CLOCK_SetMux(kCLOCK_UartMux, 0);            /* Set UART source to PLL3 80M */
     CLOCK_SetDiv(kCLOCK_UartDiv, 0);            /* Set UART divider to 1 */
-
-    CLOCK_SetMux(kCLOCK_PerclkMux, 0);          /* Set I2C/EPIT source to IPG 66M */
-    CLOCK_SetDiv(kCLOCK_PerclkDiv, 0);          /* Set I2C/EPIT divider to 1 */
 }
 
 void BOARD_DelayInit(void)

@@ -104,7 +104,6 @@ static uint32_t SDMA_GetInstance(SDMAARM_Type *base)
         }
     }
 
-    instance = 0;
     assert(instance < ARRAY_SIZE(s_sdmaBases));
 
     return instance;
