@@ -506,7 +506,7 @@ _internal_ro struct rt_device_ops _k_lcd_ops =
 
 void lcd_fill(rt_uint32_t *src, rt_uint32_t *dest, rt_uint32_t num)
 {
-     rt_memcpy(dest, src, num); //fill 800¡Á480 need 250ms!
+    rt_memcpy(dest, src, num); //fill 800¡Á480 need 250ms!
 }
 
 int rt_hw_lcd_init(void)
