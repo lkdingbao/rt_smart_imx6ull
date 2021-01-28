@@ -5,11 +5,13 @@
  * Change Logs:
  * Date           Author       Notes
  * 2021-01-11     Lyons        first version
+ * 2021-01-28     Lyons        add notes throw if sd not exited
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 /*
  * Instructions:
@@ -34,7 +36,7 @@
 #define ADDR_START              (ADDR_ENTRY - 4*1024)
 #define ADDR_DCD                (ADDR_SELF + 0x2C)
 #define ADDR_BOOT               (ADDR_SELF + 0x20)
-#define IMAGE_SIZE              (2*1024*1024)
+#define IMAGE_SIZE              (3*1024*1024)
 
 #define LOG_D(...)      \
 do \
@@ -84,6 +86,12 @@ int main( int argc, char *argv[] )
 
     char *source_bin_name = argv[1];
     char *sd_device_name = argv[2];
+
+    if (0 != access(sd_device_name, F_OK))
+    {
+        LOG_D("can not open sd device %s!", sd_device_name);
+        return -1;
+    }
 
     fp = fopen(source_bin_name, "rb");
     if (NULL == fp)

@@ -234,7 +234,7 @@ static void _gt9147_gpio_init( rt_uint8_t mode )
         pin_num = GET_PIN_FIELD(INT_PIN);
 
         config.direction = kGPIO_DigitalInput;
-        config.interruptMode = kGPIO_IntRisingOrFallingEdge;
+        config.interruptMode = kGPIO_IntRisingEdge;
         config.outputLogic = PIN_LOW;
 
         paddr = GET_GPIO_BASE_ADDR(port_num);

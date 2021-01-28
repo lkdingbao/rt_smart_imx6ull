@@ -5,21 +5,13 @@
  * Change Logs:
  * Date           Author       Notes
  * 2021-01-11     Lyons        first version
+ * 2021-01-28     Lyons        add notes throw if sd not exited
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-/*
- * Instructions:
- *
- * 1. edit macro ADDR_ENTRY to modify the load address(must be physical address)
- * 2. edit macro IMAGE_SIZE to tell the BootROM the size of image
- * 3. edit macro IMX_FILE_NAME to modify the created image file
- *    please not modified because downloader uses it defaultly
- * 4. command example: ./imdownload <source.bin> /dev/sdb [-256m or -512m]
- */
+#include <unistd.h>
 
 #define PARAM_DDR_SIZE_256M     (0)
 #define PARAM_DDR_SIZE_512M     (1)
@@ -34,7 +26,7 @@
 #define ADDR_START              (ADDR_ENTRY - 4*1024)
 #define ADDR_DCD                (ADDR_SELF + 0x2C)
 #define ADDR_BOOT               (ADDR_SELF + 0x20)
-#define IMAGE_SIZE              (2*1024*1024)
+#define IMAGE_SIZE              (3*1024*1024)
 
 #define LOG_D(...)      \
 do \
@@ -84,6 +76,12 @@ int main( int argc, char *argv[] )
 
     char *source_bin_name = argv[1];
     char *sd_device_name = argv[2];
+
+    if (0 != access(sd_device_name, F_OK))
+    {
+        LOG_D("can not open sd device %s!", sd_device_name);
+        return -1;
+    }
 
     fp = fopen(source_bin_name, "rb");
     if (NULL == fp)
