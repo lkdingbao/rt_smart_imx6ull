@@ -39,7 +39,7 @@
  *
  * @param base ELCDIF peripheral base address
  */
-static uint32_t ELCDIF_GetInstance(LCDIF_Type *base);
+uint32_t ELCDIF_GetInstance(LCDIF_Type *base);
 
 /*******************************************************************************
  * Variables
@@ -84,7 +84,7 @@ elcdif_pixel_format_reg_t s_pixelFormatReg[] = {
 /*******************************************************************************
  * Codes
  ******************************************************************************/
-static uint32_t ELCDIF_GetInstance(LCDIF_Type *base)
+uint32_t ELCDIF_GetInstance(LCDIF_Type *base)
 {
     uint32_t instance;
 

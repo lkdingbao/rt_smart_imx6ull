@@ -114,6 +114,10 @@ void BOARD_BootClockRUN(void)
     reg_value |=  CCM_CSCMR1_PERCLK_PODF(0); //'CSCMR1[PERCLK_PODF]=0b000000' divide by 1
     CCM->CSCMR1 = reg_value;
 
+    CLOCK_DeinitAudioPll();
+    CLOCK_DeinitVideoPll();
+    CLOCK_DeinitEnetPll();
+
     /* Configure UART divider to default */
     CLOCK_SetMux(kCLOCK_UartMux, 0);            /* Set UART source to PLL3 80M */
     CLOCK_SetDiv(kCLOCK_UartDiv, 0);            /* Set UART divider to 1 */

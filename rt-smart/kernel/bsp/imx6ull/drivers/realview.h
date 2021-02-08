@@ -58,12 +58,16 @@
 #define REALVIEW_GIC_DIST_BASE      (ARM_GIC_CPU_BASE+0x1000)  /* Generic interrupt controller distributor */
 #define REALVIEW_GIC_CPU_BASE       (ARM_GIC_CPU_BASE+0x2000)  /* Generic interrupt controller CPU interface */
 
-#define REALVIEW_IOMUXC0_BASE       IOMUXC_BASE
-#define REALVIEW_IOMUXC1_BASE       IOMUXC_SNVS_BASE
+#define REALVIEW_IOMUXC_BASE        IOMUXC_BASE
+#define REALVIEW_IOMUXC_SNVS_BASE   IOMUXC_SNVS_BASE
+#define REALVIEW_IOMUXC_GPR_BASE    IOMUXC_GPR_BASE
 
 #define REALVIEW_CCM_BASE           0x20C4000u
 #define REALVIEW_CCM_ANALOGY_BASE   0x20C8000u
 #define REALVIEW_PMU_BASE           0x20C8110u
+
+#define REAKVIEW_ENET1_BASE         ENET1_BASE
+#define REAKVIEW_ENET2_BASE         ENET2_BASE
 
 #define REALVIEW_GPT1_BASE          GPT1_BASE
 #define REALVIEW_GPT2_BASE          GPT2_BASE

@@ -211,11 +211,11 @@ static void _lcd_periph_init( struct skt_lcd *device )
     config.panelWidth = device->info.width;
 
     config.hsw = device->info.hsw;
-    config.hfp = device->info.hbp;
-    config.hbp = device->info.hfp;
+    config.hfp = device->info.hfp;
+    config.hbp = device->info.hbp;
     config.vsw = device->info.vsw;
-    config.vfp = device->info.vbp;
-    config.vbp = device->info.vfp;
+    config.vfp = device->info.vfp;
+    config.vbp = device->info.vbp;
 
     config.polarityFlags = kELCDIF_VsyncActiveLow
                          | kELCDIF_HsyncActiveLow

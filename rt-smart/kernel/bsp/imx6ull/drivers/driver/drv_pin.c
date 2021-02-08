@@ -36,11 +36,11 @@ _internal_ro rt_uint32_t _k_pin_valid_mask_tbl[_GPIO_PORT_NUM] =
 /* The phys base address of iomux periph */
 _internal_ro rt_uint32_t _k_periph_base_tbl[_GPIO_PORT_NUM] =
 {
-    REALVIEW_IOMUXC0_BASE,
-    REALVIEW_IOMUXC0_BASE,
-    REALVIEW_IOMUXC0_BASE,
-    REALVIEW_IOMUXC0_BASE,
-    REALVIEW_IOMUXC1_BASE,
+    REALVIEW_IOMUXC_BASE,
+    REALVIEW_IOMUXC_BASE,
+    REALVIEW_IOMUXC_BASE,
+    REALVIEW_IOMUXC_BASE,
+    REALVIEW_IOMUXC_SNVS_BASE,
 };
 
 /* The offset of reg SW_MUX_CTL_PAD or SW_PAD_CTL_PAD */
@@ -126,7 +126,7 @@ static void _pin_ops_pin_mode( struct rt_device *device,
     offset = _k_periph_reg_offset_tbl[port_num][pin_num];
     paddr = _k_periph_base_tbl[port_num];
 
-    if (REALVIEW_IOMUXC1_BASE == paddr)
+    if (REALVIEW_IOMUXC_SNVS_BASE == paddr)
     {
         IOMUXC_SNVS_Type *periph = (IOMUXC_SNVS_Type*)platform_get_periph_vaddr((rt_uint32_t)paddr);
 
