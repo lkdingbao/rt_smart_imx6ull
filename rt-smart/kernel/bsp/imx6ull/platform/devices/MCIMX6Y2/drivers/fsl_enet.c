@@ -161,7 +161,8 @@ static void ENET_SetHandler(ENET_Type *base,
 static void ENET_SetTxBufferDescriptors(volatile enet_tx_bd_struct_t *txBdStartAlign,
                                         uint8_t *txBuffStartAlign,
                                         uint32_t txBuffSizeAlign,
-                                        uint32_t txBdNumber);
+                                        uint32_t txBdNumber,
+                                        uint32_t pvOffset);
 
 /*!
  * @brief Set ENET MAC receive buffer descriptors.
@@ -178,6 +179,7 @@ static void ENET_SetRxBufferDescriptors(volatile enet_rx_bd_struct_t *rxBdStartA
                                         uint8_t *rxBuffStartAlign,
                                         uint32_t rxBuffSizeAlign,
                                         uint32_t rxBdNumber,
+                                        uint32_t pvOffset,
                                         bool enableInterrupt);
 
 /*!
@@ -348,11 +350,11 @@ void ENET_Init(ENET_Type *base,
 
     /* Initializes the ENET transmit buffer descriptors. */
     ENET_SetTxBufferDescriptors(bufferConfig->txBdStartAddrAlign, bufferConfig->txBufferAlign,
-                                bufferConfig->txBuffSizeAlign, bufferConfig->txBdNumber);
+                                bufferConfig->txBuffSizeAlign, bufferConfig->txBdNumber, bufferConfig->pvOffset);
 
     /* Initializes the ENET receive buffer descriptors. */
     ENET_SetRxBufferDescriptors(bufferConfig->rxBdStartAddrAlign, bufferConfig->rxBufferAlign,
-                                bufferConfig->rxBuffSizeAlign, bufferConfig->rxBdNumber,
+                                bufferConfig->rxBuffSizeAlign, bufferConfig->rxBdNumber, bufferConfig->pvOffset,
                                 !!(config->interrupt & (kENET_RxFrameInterrupt | kENET_RxBufferInterrupt)));
 
     /* Initializes the ENET MAC controller. */
@@ -360,6 +362,9 @@ void ENET_Init(ENET_Type *base,
 
     /* Set all buffers or data in handler for data transmit/receive process. */
     ENET_SetHandler(base, handle, config, bufferConfig);
+
+    /* Set address map offset. by liang */
+    handle->userData = (void*)(bufferConfig->pvOffset);
 }
 
 void ENET_Deinit(ENET_Type *base)
@@ -509,8 +514,8 @@ static void ENET_SetMacController(ENET_Type *base,
     }
 
     /* Initializes transmit buffer descriptor rings start address, two start address should be aligned. */
-    base->TDSR = (uint32_t)bufferConfig->txBdStartAddrAlign;
-    base->RDSR = (uint32_t)bufferConfig->rxBdStartAddrAlign;
+    base->TDSR = (uint32_t)bufferConfig->txBdStartAddrAlign + bufferConfig->pvOffset;
+    base->RDSR = (uint32_t)bufferConfig->rxBdStartAddrAlign + bufferConfig->pvOffset;
     /* Initializes the maximum buffer size, the buffer size should be aligned. */
     base->MRBR = bufferConfig->rxBuffSizeAlign;
 
@@ -555,7 +560,8 @@ static void ENET_SetMacController(ENET_Type *base,
 static void ENET_SetTxBufferDescriptors(volatile enet_tx_bd_struct_t *txBdStartAlign,
                                         uint8_t *txBuffStartAlign,
                                         uint32_t txBuffSizeAlign,
-                                        uint32_t txBdNumber)
+                                        uint32_t txBdNumber,
+                                        uint32_t pvOffset)
 {
     assert(txBdStartAlign);
     assert(txBuffStartAlign);
@@ -566,7 +572,7 @@ static void ENET_SetTxBufferDescriptors(volatile enet_tx_bd_struct_t *txBdStartA
     for (count = 0; count < txBdNumber; count++)
     {
         /* Set data buffer address. */
-        curBuffDescrip->buffer = (uint8_t *)((uint32_t)&txBuffStartAlign[count * txBuffSizeAlign]);
+        curBuffDescrip->buffer = (uint8_t *)((uint32_t)&txBuffStartAlign[count * txBuffSizeAlign] + pvOffset);
         /* Initializes data length. */
         curBuffDescrip->length = 0;
         /* Sets the crc. */
@@ -595,6 +601,7 @@ static void ENET_SetRxBufferDescriptors(volatile enet_rx_bd_struct_t *rxBdStartA
                                         uint8_t *rxBuffStartAlign,
                                         uint32_t rxBuffSizeAlign,
                                         uint32_t rxBdNumber,
+                                        uint32_t pvOffset,
                                         bool enableInterrupt)
 {
     assert(rxBdStartAlign);
@@ -607,7 +614,7 @@ static void ENET_SetRxBufferDescriptors(volatile enet_rx_bd_struct_t *rxBdStartA
     for (count = 0; count < rxBdNumber; count++)
     {
         /* Set data buffer and the length. */
-        curBuffDescrip->buffer = (uint8_t *)((uint32_t)&rxBuffStartAlign[count * rxBuffSizeAlign]);
+        curBuffDescrip->buffer = (uint8_t *)((uint32_t)&rxBuffStartAlign[count * rxBuffSizeAlign] + pvOffset);
         curBuffDescrip->length = 0;
 
         /* Initializes the buffer descriptors with empty bit. */
@@ -1045,6 +1052,7 @@ status_t ENET_SendFrame(ENET_Type *base, enet_handle_t *handle, const uint8_t *d
     volatile enet_tx_bd_struct_t *curBuffDescrip = handle->txBdCurrent;
     uint32_t len = 0;
     uint32_t sizeleft = 0;
+    uint32_t pvOffset = (uint32_t)(handle->userData);
 
     /* Check if the transmit buffer is ready. */
     if (curBuffDescrip->control & ENET_BUFFDESCRIPTOR_TX_READY_MASK)
@@ -1060,7 +1068,7 @@ status_t ENET_SendFrame(ENET_Type *base, enet_handle_t *handle, const uint8_t *d
     if (handle->txBuffSizeAlign >= length)
     {
         /* Copy data to the buffer for uDMA transfer. */
-        memcpy(curBuffDescrip->buffer, data, length);
+        memcpy(curBuffDescrip->buffer - pvOffset, data, length);
 
         /* Set data length. */
         curBuffDescrip->length = length;
@@ -1126,7 +1134,7 @@ status_t ENET_SendFrame(ENET_Type *base, enet_handle_t *handle, const uint8_t *d
             if (sizeleft > handle->txBuffSizeAlign)
             {
                 /* Data copy. */
-                memcpy(curBuffDescrip->buffer, data + len, handle->txBuffSizeAlign);
+                memcpy(curBuffDescrip->buffer - pvOffset, data + len, handle->txBuffSizeAlign);
                 /* Data length update. */
                 curBuffDescrip->length = handle->txBuffSizeAlign;
                 len += handle->txBuffSizeAlign;
@@ -1142,7 +1150,7 @@ status_t ENET_SendFrame(ENET_Type *base, enet_handle_t *handle, const uint8_t *d
             }
             else
             {
-                memcpy(curBuffDescrip->buffer, data + len, sizeleft);
+                memcpy(curBuffDescrip->buffer - pvOffset, data + len, sizeleft);
                 curBuffDescrip->length = sizeleft;
                 /* Set Last buffer wrap flag. */
                 curBuffDescrip->control |= ENET_BUFFDESCRIPTOR_TX_READY_MASK | ENET_BUFFDESCRIPTOR_TX_LAST_MASK;

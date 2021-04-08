@@ -298,19 +298,13 @@
 
 /* Platform Device Configuration */
 
-#define RT_USING_GT7147
-#define TOUCH_POINT_NUM 5
-#define RT_USING_PCF8574
 
 /* Third-party Libraries Configuration */
 
-#define RT_USING_LVGL
-#define BSP_USING_LVGL_EXAMPLE
 
 /* Program Self Test Code */
 
 #define RT_FUNC_SELF_TEST
 #define RT_FUNC_SELF_TEST_PIN_DEV
-#define RT_FUNC_SELF_TEST_LVGL_DEV
 
 #endif

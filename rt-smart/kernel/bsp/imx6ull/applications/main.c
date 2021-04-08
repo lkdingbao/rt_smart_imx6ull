@@ -91,12 +91,13 @@ void display_entry( void * parameter )
 
     while (1)
     {
+#ifdef RT_USING_GT7147
         if (_g_gt9147_flag & GT_FLAG_NEW_DATA)
         {
             rt_device_read(touch_dev, 0, &_g_touch_data, sizeof(struct skt_touch_data)); //1ms/2ms/5ms
             _g_gt9147_flag &= ~GT_FLAG_NEW_DATA;
         }
-
+#endif
 #ifdef RT_USING_LVGL
         lv_task_handler();
 #endif

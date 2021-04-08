@@ -89,37 +89,31 @@ static void _lan8720_gpio_init( void )
     GPIO_WritePinOutput((GPIO_Type*)vaddr, pin_num, 1);
 }
 
-#define EXAMPLE_ENET ((ENET_Type*)rt_hw_kernel_phys_to_virt(ENET2, sizeof(ENET_Type)))
-#define EXAMPLE_PHY 0x01U
-#define CORE_CLK_FREQ CLOCK_GetFreq(kCLOCK_AhbClk)
-#define APP_ENET_BUFF_ALIGNMENT MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE)
-#define ENET_RXBD_NUM (4)
-#define ENET_TXBD_NUM (4)
-#define ENET_RXBUFF_SIZE (ENET_FRAME_MAX_FRAMELEN)
-#define ENET_TXBUFF_SIZE (ENET_FRAME_MAX_FRAMELEN)
-#define ENET_DATA_LENGTH (1000)
-#define ENET_TRANSMIT_DATA_NUM (20)
-#ifndef APP_ENET_BUFF_ALIGNMENT
-#define APP_ENET_BUFF_ALIGNMENT ENET_BUFF_ALIGNMENT
-#endif
+#define EXAMPLE_ENET                ((ENET_Type*)rt_hw_kernel_phys_to_virt(ENET2, sizeof(ENET_Type)))
+#define EXAMPLE_PHY                 (1)
 
-/*! @brief Buffer descriptors should be in non-cacheable region and should be align to "ENET_BUFF_ALIGNMENT". */
-AT_NONCACHEABLE_SECTION_ALIGN(enet_rx_bd_struct_t g_rxBuffDescrip[ENET_RXBD_NUM], ENET_BUFF_ALIGNMENT);
-AT_NONCACHEABLE_SECTION_ALIGN(enet_tx_bd_struct_t g_txBuffDescrip[ENET_TXBD_NUM], ENET_BUFF_ALIGNMENT);
-/*! @brief The data buffers can be in cacheable region or in non-cacheable region.
- * If use cacheable region, the alignment size should be the maximum size of "CACHE LINE SIZE" and "ENET_BUFF_ALIGNMENT"
- * If use non-cache region, the alignment size is the "ENET_BUFF_ALIGNMENT".
- */
-SDK_ALIGN(uint8_t g_rxDataBuff[ENET_RXBD_NUM][SDK_SIZEALIGN(ENET_RXBUFF_SIZE, APP_ENET_BUFF_ALIGNMENT)],
-          APP_ENET_BUFF_ALIGNMENT);
-SDK_ALIGN(uint8_t g_txDataBuff[ENET_TXBD_NUM][SDK_SIZEALIGN(ENET_TXBUFF_SIZE, APP_ENET_BUFF_ALIGNMENT)],
-          APP_ENET_BUFF_ALIGNMENT);
+#define CORE_CLK_FREQ               CLOCK_GetFreq(kCLOCK_AhbClk)
 
-enet_handle_t g_handle;
-uint8_t g_frame[ENET_DATA_LENGTH + 14];
+#define APP_ENET_BUFF_ALIGNMENT     MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE)
 
-/*! @brief The MAC address for ENET device. */
-uint8_t g_macAddr[6] = {0xd4, 0xbe, 0xd9, 0x45, 0x22, 0x60};
+#define ENET_RXBD_NUM               (4)
+#define ENET_TXBD_NUM               (4)
+#define ENET_RXBUFF_SIZE            (ENET_FRAME_MAX_FRAMELEN)
+#define ENET_TXBUFF_SIZE            (ENET_FRAME_MAX_FRAMELEN)
+
+#define ENET_DATA_LENGTH            (128)
+
+_internal_rw uint32_t *s_rxBuffDescrip = RT_NULL;
+_internal_rw uint32_t *s_txBuffDescrip = RT_NULL;
+_internal_rw uint32_t *s_rxDataBuff = RT_NULL;
+_internal_rw uint32_t *s_txDataBuff = RT_NULL;
+_internal_rw uint8_t *s_macAddr = RT_NULL;
+
+_internal_rw enet_handle_t s_handle;
+_internal_rw uint8_t s_frame[ENET_DATA_LENGTH + 14];
+
+_internal_ro uint8_t k_src_mac_addr[6] = {0xd4, 0xbe, 0xd9, 0x45, 0x22, 0x60};
+_internal_ro uint8_t k_tgt_mac_addr[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
 static rt_err_t BOARD_InitModuleClock( void )
 {
@@ -141,24 +135,21 @@ static void ENET_BuildBroadCastFrame(void)
     uint32_t count = 0;
     uint32_t length = ENET_DATA_LENGTH - 14;
 
-    for (count = 0; count < 6U; count++)
-    {
-        g_frame[count] = 0xFFU;
-    }
-    memcpy(&g_frame[6], &g_macAddr[0], 6U);
-    g_frame[12] = (length >> 8) & 0xFFU;
-    g_frame[13] = length & 0xFFU;
+    rt_memcpy(&s_frame[0], k_tgt_mac_addr, 6U);
+    rt_memcpy(&s_frame[6], k_src_mac_addr, 6U);
+
+    s_frame[12] = (length >> 8) & 0xFFU;
+    s_frame[13] = length & 0xFFU;
 
     for (count = 0; count < length; count++)
     {
-        g_frame[count + 14] = count % 0xFFU;
+        s_frame[count + 14] = count % 0xFFU;
     }
 }
 
 void _enet_callback( ENET_Type *base, enet_handle_t *handle, enet_event_t event, void *userData )
 {
     LOG_D("_enet_callback");
-    gpio_easy_write(0); //0-on,1-off
 }
 
 static rt_err_t _lan8720_device_init( void )
@@ -170,20 +161,24 @@ static rt_err_t _lan8720_device_init( void )
     status_t result;
     bool link;
 
-    gpio_easy_set_output_mode(GET_PIN(0,3));
+    s_rxBuffDescrip = (uint32_t*)rt_pages_alloc(rt_page_bits(8192));
+    s_txBuffDescrip = (uint32_t*)rt_pages_alloc(rt_page_bits(8192));
+    s_rxDataBuff = (uint32_t*)rt_pages_alloc(rt_page_bits(8192));
+    s_txDataBuff  = (uint32_t*)rt_pages_alloc(rt_page_bits(8192));
+    s_macAddr = (uint8_t*)rt_pages_alloc(rt_page_bits(6));
 
-    sysClock = CORE_CLK_FREQ;
+    rt_memcpy(s_macAddr, k_src_mac_addr, 6U);
 
-    /* prepare the buffer configuration. */
     enet_buffer_config_t buffConfig = {
         ENET_RXBD_NUM,
         ENET_TXBD_NUM,
         SDK_SIZEALIGN(ENET_RXBUFF_SIZE, APP_ENET_BUFF_ALIGNMENT),
         SDK_SIZEALIGN(ENET_TXBUFF_SIZE, APP_ENET_BUFF_ALIGNMENT),
-        (volatile enet_rx_bd_struct_t*)(PV_OFFSET+&g_rxBuffDescrip[0]),
-        (volatile enet_tx_bd_struct_t*)(PV_OFFSET+&g_txBuffDescrip[0]),
-        (uint8_t*)(PV_OFFSET+&g_rxDataBuff[0][0]),
-        (uint8_t*)(PV_OFFSET+&g_txDataBuff[0][0]),
+        (volatile enet_rx_bd_struct_t*)(s_rxBuffDescrip),
+        (volatile enet_tx_bd_struct_t*)(s_txBuffDescrip),
+        (uint8_t*)(s_rxDataBuff),
+        (uint8_t*)(s_txDataBuff),
+        PV_OFFSET,
     };
 
     BOARD_InitModuleClock();
@@ -197,12 +192,13 @@ static rt_err_t _lan8720_device_init( void )
      */
     ENET_GetDefaultConfig(&config);
 
-    /* Set SMI to get PHY link status. */
+    sysClock = CORE_CLK_FREQ;
+
     result = PHY_Init(EXAMPLE_ENET, EXAMPLE_PHY, sysClock);
-    LOG_D("PHY init %s", (result?"failed":"success"));
+    LOG_D("PHY init %s.", (result?"failed":"success"));
 
     PHY_GetLinkStatus(EXAMPLE_ENET, EXAMPLE_PHY, &link);
-    LOG_D("PHY link %s", (link?"up":"down"));
+    LOG_D("PHY link %s.", (link?"up":"down"));
 
     if (link)
     {
@@ -212,33 +208,25 @@ static rt_err_t _lan8720_device_init( void )
         config.miiSpeed = (enet_mii_speed_t)speed;
         config.miiDuplex = (enet_mii_duplex_t)duplex;
 
-        LOG_D("PHY speed %dM, duplex %s", (config.miiSpeed?100:10), (config.miiDuplex?"full":"half"));
+        LOG_D("PHY speed %dM, duplex %s.", (config.miiSpeed?100:10), (config.miiDuplex?"full":"half"));
     }
     else
     {
         LOG_D("PHY Link down, please check the cable connection and link partner setting.");
     }
 
-    gpio_easy_write(1); //0-on,1-off
-    rt_hw_ms_delay(1000);
-    gpio_easy_write(0); //0-on,1-off
-    rt_hw_ms_delay(1000);
-    gpio_easy_write(1); //0-on,1-off
+//    config.interrupt = kENET_TxFrameInterrupt
+//                     | kENET_RxFrameInterrupt;
+//    ENET_SetCallback(&s_handle, _enet_callback, RT_NULL);
 
-    config.interrupt = kENET_TxFrameInterrupt
-                     | kENET_RxFrameInterrupt;
-    ENET_SetCallback(&g_handle, _enet_callback, RT_NULL);
-
-    ENET_Init(EXAMPLE_ENET, &g_handle, &config, &buffConfig, &g_macAddr[0], sysClock);
+    ENET_Init(EXAMPLE_ENET, &s_handle, &config, &buffConfig, s_macAddr, sysClock);
     ENET_ActiveRead(EXAMPLE_ENET);
 
-    /* Build broadcast for sending. */
+    LOG_D("lan8720 init finished.");
+
     ENET_BuildBroadCastFrame();
-
-    LOG_D("lan8720 init finished!");
-
-    result = ENET_SendFrame(EXAMPLE_ENET, &g_handle, &g_frame[0], ENET_DATA_LENGTH);
-    LOG_D("PHY send %s", (result?"failed":"success"));
+    result = ENET_SendFrame(EXAMPLE_ENET, &s_handle, s_frame, ENET_DATA_LENGTH);
+    LOG_D("PHY send %s.", (result?"failed":"success"));
 
     UNUSED(result);
     return RT_EOK;
@@ -330,7 +318,7 @@ int rt_hw_lan8720_init(void)
 
     return RT_EOK;
 }
-//INIT_DEVICE_EXPORT(rt_hw_lan8720_init);
+INIT_DEVICE_EXPORT(rt_hw_lan8720_init);
 
 #endif //#ifdef RT_USING_LAN8720
 

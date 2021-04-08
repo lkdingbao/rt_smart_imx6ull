@@ -179,8 +179,13 @@ struct skt_touch_data
     rt_uint8_t                  max; //max supported point number
     rt_uint8_t                  num; //current get point number
 
+#ifdef TOUCH_POINT_NUM
     uint16_t                    x[TOUCH_POINT_NUM];
     uint16_t                    y[TOUCH_POINT_NUM];
+#else
+    uint16_t                    x[1];
+    uint16_t                    y[1];
+#endif
 };
 
 #ifdef cplusplus

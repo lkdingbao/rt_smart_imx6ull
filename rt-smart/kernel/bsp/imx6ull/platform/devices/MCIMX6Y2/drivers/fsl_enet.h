@@ -408,6 +408,7 @@ typedef struct _enet_buffer_config
     volatile enet_tx_bd_struct_t *txBdStartAddrAlign; /*!< Aligned transmit buffer descriptor start address. */
     uint8_t *rxBufferAlign;                           /*!< Receive data buffer start address. */
     uint8_t *txBufferAlign;                           /*!< Transmit data buffer start address. */
+    uint32_t pvOffset;                                /*!< add this value to get phys address. by liang */
 } enet_buffer_config_t;
 
 #ifdef ENET_ENHANCEDBUFFERDESCRIPTOR_MODE
