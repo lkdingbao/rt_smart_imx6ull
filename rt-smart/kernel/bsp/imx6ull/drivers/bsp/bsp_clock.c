@@ -116,7 +116,7 @@ void BOARD_BootClockRUN(void)
 
     CLOCK_DeinitAudioPll();
     CLOCK_DeinitVideoPll();
-    CLOCK_DeinitEnetPll();
+//    CLOCK_DeinitEnetPll();
 
     /* Configure UART divider to default */
     CLOCK_SetMux(kCLOCK_UartMux, 0);            /* Set UART source to PLL3 80M */

@@ -51,7 +51,7 @@
 #define PHY_ID2_REG 0x03U               /*!< The PHY ID two register. */
 #define PHY_AUTONEG_ADVERTISE_REG 0x04U /*!< The PHY auto-negotiate advertise register. */
 #define PHY_CONTROL1_REG 0x1FU          /*!< The PHY control one register. */
-#define PHY_CONTROL2_REG 0x1FU          /*!< The PHY control two register. No use in LAN8720A. */
+#define PHY_CONTROL2_REG 0x1FU          /*!< The PHY control two register. */
 
 #define PHY_CONTROL_ID1 0x07U /*!< The PHY ID1*/
 
@@ -66,11 +66,11 @@
 /*!@brief Defines the mask flag of operation mode in control two register*/
 #define PHY_CTL2_REMOTELOOP_MASK 0x0004U    /*!< The PHY remote loopback mask. */
 #define PHY_CTL2_REFCLK_SELECT_MASK 0x0080U /*!< The PHY RMII reference clock select. */ 
-#define PHY_CTL1_10HALFDUPLEX_MASK 0x0004U  /*!< The PHY 10M half duplex mask. */
-#define PHY_CTL1_100HALFDUPLEX_MASK 0x0014U /*!< The PHY 100M half duplex mask. */
-#define PHY_CTL1_10FULLDUPLEX_MASK 0x0008U  /*!< The PHY 10M full duplex mask. */
-#define PHY_CTL1_100FULLDUPLEX_MASK 0x0018U /*!< The PHY 100M full duplex mask. */
-#define PHY_CTL1_SPEEDUPLX_MASK 0x001CU     /*!< The PHY speed and duplex mask. */
+#define PHY_CTL1_10HALFDUPLEX_MASK 0x0001U  /*!< The PHY 10M half duplex mask. */
+#define PHY_CTL1_100HALFDUPLEX_MASK 0x0002U /*!< The PHY 100M half duplex mask. */
+#define PHY_CTL1_10FULLDUPLEX_MASK 0x0005U  /*!< The PHY 10M full duplex mask. */
+#define PHY_CTL1_100FULLDUPLEX_MASK 0x0006U /*!< The PHY 100M full duplex mask. */
+#define PHY_CTL1_SPEEDUPLX_MASK 0x0007U     /*!< The PHY speed and duplex mask. */
 
 /*! @brief Defines the mask flag in basic status register. */
 #define PHY_BSTATUS_LINKSTATUS_MASK 0x0004U  /*!< The PHY link status mask. */

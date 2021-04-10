@@ -41,6 +41,19 @@
 #include <stddef.h>
 #endif
 
+/* add for debug. by liang */
+#include "rthw.h"
+#ifndef debug
+#define debug(...) \
+do \
+{ \
+    rt_kprintf(__VA_ARGS__); \
+    rt_kprintf("\r\n"); \
+} while(0);
+#endif
+
+#define FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL 1
+
 #include "fsl_device_registers.h"
 
 /*!
@@ -346,8 +359,7 @@ void SDK_Free(void *ptr);
 #endif
 
 #if defined(__GIC_PRIO_BITS)
-        void rt_hw_interrupt_umask(int vector);
-        rt_hw_interrupt_umask(interrupt); ;//GIC_EnableIRQ(interrupt);
+        GIC_EnableIRQ(interrupt);
 #else
     NVIC_EnableIRQ(interrupt);
 #endif

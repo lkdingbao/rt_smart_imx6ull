@@ -542,6 +542,7 @@ struct _enet_handle
     enet_ptp_time_data_ring_t rxPtpTsDataRing;     /*!< Receive PTP 1588 time stamp data ring buffer. */
     enet_ptp_time_data_ring_t txPtpTsDataRing;     /*!< Transmit PTP 1588 time stamp data ring buffer. */
 #endif                                             /* ENET_ENHANCEDBUFFERDESCRIPTOR_MODE */
+    uint32_t pvOffset;                         /*!< add this value to get phys address. by liang */
 };
 
 /*******************************************************************************

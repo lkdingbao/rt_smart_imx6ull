@@ -88,7 +88,7 @@
 #include <armv7.h>
 
 /* number of interrupts on board */
-#define ARM_GIC_NR_IRQS             128
+#define ARM_GIC_NR_IRQS             160
 /* only one GIC available */
 #define ARM_GIC_MAX_NR              1
 

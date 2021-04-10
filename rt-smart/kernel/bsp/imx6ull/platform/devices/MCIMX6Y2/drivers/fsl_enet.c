@@ -28,8 +28,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL 1
-
 #include "fsl_enet.h"
 #if defined(FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL) && FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL    
 #include "fsl_cache.h"
@@ -336,9 +334,8 @@ void ENET_Init(ENET_Type *base,
         assert(bufferConfig->rxBuffSizeAlign * bufferConfig->rxBdNumber > config->rxMaxFrameLen);
     }
 
-#if !(defined(FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL) && FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL)
     uint32_t instance = ENET_GetInstance(base);
-#endif
+    (void)instance;
 
 #if !(defined(FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL) && FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL)
     /* Ungate ENET clock. */
@@ -364,7 +361,7 @@ void ENET_Init(ENET_Type *base,
     ENET_SetHandler(base, handle, config, bufferConfig);
 
     /* Set address map offset. by liang */
-    handle->userData = (void*)(bufferConfig->pvOffset);
+    handle->pvOffset = bufferConfig->pvOffset;
 }
 
 void ENET_Deinit(ENET_Type *base)
@@ -396,6 +393,7 @@ static void ENET_SetHandler(ENET_Type *base,
                             const enet_buffer_config_t *bufferConfig)
 {
     uint32_t instance = ENET_GetInstance(base);
+    (void)instance;
 
     memset(handle, 0, sizeof(enet_handle_t));
 
@@ -413,18 +411,24 @@ static void ENET_SetHandler(ENET_Type *base,
     if (config->interrupt & ENET_TX_INTERRUPT)
     {
         s_enetTxIsr = ENET_TransmitIRQHandler;
-        EnableIRQ(s_enetTxIrqId[instance]);
+        (void)(s_enetTxIrqId); //EnableIRQ(s_enetTxIrqId[instance]);
     }
     if (config->interrupt & ENET_RX_INTERRUPT)
     {
         s_enetRxIsr = ENET_ReceiveIRQHandler;
-        EnableIRQ(s_enetRxIrqId[instance]);
+        (void)(s_enetRxIrqId); //EnableIRQ(s_enetRxIrqId[instance]);
     }
     if (config->interrupt & ENET_ERR_INTERRUPT)
     {
         s_enetErrIsr = ENET_ErrorIRQHandler;
-        EnableIRQ(s_enetErrIrqId[instance]);
+        (void)(s_enetErrIrqId); //EnableIRQ(s_enetErrIrqId[instance]);
     }
+
+    //not finished! by liang
+    extern void ENET2_DriverIRQHandler(void);
+
+    rt_hw_interrupt_install(s_enetTxIrqId[instance], (rt_isr_handler_t)ENET2_DriverIRQHandler, NULL, "enet2");
+    rt_hw_interrupt_umask(s_enetTxIrqId[instance]);
 }
 
 static void ENET_SetMacController(ENET_Type *base,
@@ -514,8 +518,8 @@ static void ENET_SetMacController(ENET_Type *base,
     }
 
     /* Initializes transmit buffer descriptor rings start address, two start address should be aligned. */
-    base->TDSR = (uint32_t)bufferConfig->txBdStartAddrAlign + bufferConfig->pvOffset;
-    base->RDSR = (uint32_t)bufferConfig->rxBdStartAddrAlign + bufferConfig->pvOffset;
+    base->TDSR = (uint32_t)bufferConfig->txBdStartAddrAlign + bufferConfig->pvOffset; //use phys address
+    base->RDSR = (uint32_t)bufferConfig->rxBdStartAddrAlign + bufferConfig->pvOffset; //use phys address
     /* Initializes the maximum buffer size, the buffer size should be aligned. */
     base->MRBR = bufferConfig->rxBuffSizeAlign;
 
@@ -1052,7 +1056,7 @@ status_t ENET_SendFrame(ENET_Type *base, enet_handle_t *handle, const uint8_t *d
     volatile enet_tx_bd_struct_t *curBuffDescrip = handle->txBdCurrent;
     uint32_t len = 0;
     uint32_t sizeleft = 0;
-    uint32_t pvOffset = (uint32_t)(handle->userData);
+    uint32_t pvOffset =  handle->pvOffset;
 
     /* Check if the transmit buffer is ready. */
     if (curBuffDescrip->control & ENET_BUFFDESCRIPTOR_TX_READY_MASK)
@@ -1097,7 +1101,7 @@ status_t ENET_SendFrame(ENET_Type *base, enet_handle_t *handle, const uint8_t *d
         }
 #if defined(FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL) && FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL
         /* Add the cache clean maintain. */
-        DCACHE_CleanByRange((uint32_t)curBuffDescrip->buffer, length);
+        DCACHE_CleanByRange((uint32_t)curBuffDescrip->buffer - pvOffset, length);
 #endif  /* FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL */
         /* Active the transmit buffer descriptor. */
         base->TDAR = ENET_TDAR_TDAR_MASK;
@@ -1143,7 +1147,7 @@ status_t ENET_SendFrame(ENET_Type *base, enet_handle_t *handle, const uint8_t *d
                 curBuffDescrip->control |= ENET_BUFFDESCRIPTOR_TX_READY_MASK;
 #if defined(FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL) && FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL
                 /* Add the cache clean maintain. */
-                DCACHE_CleanByRange((uint32_t)curBuffDescrip->buffer, handle->txBuffSizeAlign);
+                DCACHE_CleanByRange((uint32_t)curBuffDescrip->buffer - pvOffset, handle->txBuffSizeAlign);
 #endif  /* FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL */                
                 /* Active the transmit buffer descriptor*/
                 base->TDAR = ENET_TDAR_TDAR_MASK;
@@ -1156,7 +1160,7 @@ status_t ENET_SendFrame(ENET_Type *base, enet_handle_t *handle, const uint8_t *d
                 curBuffDescrip->control |= ENET_BUFFDESCRIPTOR_TX_READY_MASK | ENET_BUFFDESCRIPTOR_TX_LAST_MASK;
 #if defined(FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL) && FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL                
                 /* Add the cache clean maintain. */
-                DCACHE_CleanByRange((uint32_t)curBuffDescrip->buffer, sizeleft);
+                DCACHE_CleanByRange((uint32_t)curBuffDescrip->buffer - pvOffset, sizeleft);
 #endif  /* FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL */               
                 /* Active the transmit buffer descriptor. */
                 base->TDAR = ENET_TDAR_TDAR_MASK;
