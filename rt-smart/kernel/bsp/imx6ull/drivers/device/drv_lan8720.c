@@ -24,15 +24,24 @@
 #include "skt.h"
 
 #define DBG_TAG "LAN8720"
-#define DBG_LVL DBG_WARNING
+#define DBG_LVL DBG_LOG
 #include <rtdbg.h>
 
 #define ENET_PHY_MONITOR_EN (1)
+#define ENET_MEM_BY_USER_EN (1)
 
+#if defined(ENET_MEM_BY_USER_EN) && (ENET_MEM_BY_USER_EN)
+/* This is only a test method. not used in formal occasion. */
+_internal_rw enet_rx_bd_struct_t *_s_rxBuffDescrip;
+_internal_rw enet_tx_bd_struct_t *_s_txBuffDescrip;
+_internal_rw uint8_t *_s_rxDataBuff;
+_internal_rw uint8_t *_s_txDataBuff;
+#else
 _internal_rw AT_NONCACHEABLE_SECTION_ALIGN(enet_rx_bd_struct_t _s_rxBuffDescrip[ENET_RXBD_NUM], ENET_BUFF_ALIGNMENT);
 _internal_rw AT_NONCACHEABLE_SECTION_ALIGN(enet_tx_bd_struct_t _s_txBuffDescrip[ENET_TXBD_NUM], ENET_BUFF_ALIGNMENT);
 _internal_rw SDK_ALIGN(uint8_t _s_rxDataBuff[ENET_RXBD_NUM][SDK_SIZEALIGN(ENET_RXBUFF_SIZE, APP_ENET_BUFF_ALIGNMENT)], APP_ENET_BUFF_ALIGNMENT);
 _internal_rw SDK_ALIGN(uint8_t _s_txDataBuff[ENET_TXBD_NUM][SDK_SIZEALIGN(ENET_TXBUFF_SIZE, APP_ENET_BUFF_ALIGNMENT)], APP_ENET_BUFF_ALIGNMENT);
+#endif
 
 _internal_rw struct skt_netdev _s_lan8720_device = {
     .name = "enet2",
@@ -273,15 +282,23 @@ static rt_err_t _lan8720_device_init( struct skt_netdev *netdev )
     ENET_Type *enet = RT_NULL;
     bool link;
 
+#if defined(ENET_MEM_BY_USER_EN) && (ENET_MEM_BY_USER_EN)
+    /* This is only a test method. not used in formal occasion. */
+    _s_rxBuffDescrip = (enet_rx_bd_struct_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x0); //2K Byte, offset 0x0
+    _s_txBuffDescrip = (enet_tx_bd_struct_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x800); //2K Byte, offset 0x800
+    _s_rxDataBuff = (uint8_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x100000); //1M Byte, offset 0x100000
+    _s_txDataBuff = (uint8_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x200000); //1M Byte, offset 0x200000
+#endif
+
     enet_buffer_config_t buffConfig = {
         ENET_RXBD_NUM,
         ENET_TXBD_NUM,
         SDK_SIZEALIGN(ENET_RXBUFF_SIZE, APP_ENET_BUFF_ALIGNMENT),
         SDK_SIZEALIGN(ENET_TXBUFF_SIZE, APP_ENET_BUFF_ALIGNMENT),
-        &_s_rxBuffDescrip[0],
-        &_s_txBuffDescrip[0],
-        &_s_rxDataBuff[0][0],
-        &_s_txDataBuff[0][0],
+        (volatile enet_rx_bd_struct_t*)_s_rxBuffDescrip,
+        (volatile enet_tx_bd_struct_t*)_s_txBuffDescrip,
+        (uint8_t*)_s_rxDataBuff,
+        (uint8_t*)_s_txDataBuff,
     };
 
     RT_ASSERT(RT_NULL != netdev);
