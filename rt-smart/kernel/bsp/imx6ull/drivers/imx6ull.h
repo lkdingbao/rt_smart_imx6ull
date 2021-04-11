@@ -14,7 +14,9 @@
 /* for 'rt_inline' */
 #include <rtdef.h>
 /* for 'rt_hw_kernel_phys_to_virt' */
+#ifdef RT_USING_LWP
 #include <lwp.h>
+#endif
 
 /* SOC-relative definitions */
 #include <realview.h>
@@ -50,12 +52,20 @@ rt_inline rt_uint32_t platform_get_periph_vaddr(rt_uint32_t paddr)
 
 rt_inline uint32_t mem_map_v2p(uint32_t virt)
 {
+#ifdef RT_USING_USERSPACE
     return virt + PV_OFFSET;
+#else
+    return virt;
+#endif
 }
 
 rt_inline uint32_t mem_map_p2v(uint32_t phys)
 {
+#ifdef RT_USING_USERSPACE
     return phys - PV_OFFSET;
+#else
+    return phys;
+#endif
 }
 
 #define GIC_IRQ_START   0

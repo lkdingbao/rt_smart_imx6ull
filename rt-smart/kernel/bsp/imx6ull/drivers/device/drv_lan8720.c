@@ -14,8 +14,10 @@
 #ifdef RT_USING_LAN8720
 
 #include <board.h>
+#ifdef RT_USING_LWP
 #include <lwp.h>
 #include <lwp_user_mm.h>
+#endif
 
 #include "__def.h"
 #include "realview.h"
@@ -167,7 +169,7 @@ static struct pbuf* _imx_enet_rx( rt_device_t dev )
     ENET_Type *enet = RT_NULL;
     struct pbuf *pbuf = RT_NULL;
     enet_data_error_stats_t eErrStatic;
-    rt_uint32_t rxlen = 0;
+    uint32_t rxlen = 0;
     status_t result;
 
     RT_ASSERT(RT_NULL != dev);

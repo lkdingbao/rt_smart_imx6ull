@@ -9,7 +9,9 @@
  */
 
 #include <rtthread.h>
+#ifdef RT_USING_LWP
 #include <lwp.h>
+#endif
 
 #include "__def.h"
 #include "bsp_gpio.h"
@@ -43,6 +45,13 @@ int main(void)
     LOG_D("rt-smart on imx6ull");
     LOG_D("build %s %s", __DATE__, __TIME__);
 
+    /*
+     * redirect the console will cause a error.
+     * e.g. redirect from uart to clcd, and final to uart.
+     *      the second uart will not recv any input.
+     *      but this is only occured under rt-thread,
+     *      while rt-smart is no-error.
+     */
     rt_console_set_device(RT_CONSOLE_DEVICE_NAME);
 
     LOG_D("rt-smart on imx6ull");

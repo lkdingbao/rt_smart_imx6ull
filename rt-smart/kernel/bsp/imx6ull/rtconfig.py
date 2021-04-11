@@ -26,8 +26,8 @@ with open(automac_h_fn, 'w') as f:
     f.write(header + get_mac_address() + end)
 
 # toolchains options
-ARCH        ='arm'
-CPU         ='cortex-a'
+ARCH        = 'arm'
+CPU         = 'cortex-a'
 CROSS_TOOL  = 'gcc'
 PLATFORM    = 'gcc'
 EXEC_PATH   = os.getenv('RTT_EXEC_PATH') or '/usr/bin'

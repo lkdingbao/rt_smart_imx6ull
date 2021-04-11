@@ -45,11 +45,11 @@ void gpio_set_int_mode(GPIO_Type *port, rt_uint32_t pin, const gpio_interrupt_mo
 
     if(pin < 16)
     {
-        icr = &(port->ICR1);
+        icr = (volatile rt_uint32_t*)&(port->ICR1);
     }
     else
     {
-        icr = &(port->ICR2);
+        icr = (volatile rt_uint32_t*)&(port->ICR2);
         icrShift -= 16;
     }
     switch(pinInterruptMode)

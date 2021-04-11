@@ -1,6 +1,6 @@
 #include <rtthread.h>
 
-#ifdef RT_USING_DFS
+#ifdef RT_USING_DFS_ROMFS
 #include <dfs_fs.h>
 #include <dfs_romfs.h>
 

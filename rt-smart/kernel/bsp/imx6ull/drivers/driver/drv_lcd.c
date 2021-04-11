@@ -14,8 +14,10 @@
 #ifdef RT_USING_RGBLCD
 
 #include <board.h>
+#ifdef RT_USING_LWP
 #include <lwp.h>
 #include <lwp_user_mm.h>
+#endif
 
 #include "__def.h"
 #include "realview.h"
@@ -504,7 +506,7 @@ _internal_ro struct rt_device_ops _k_lcd_ops =
 };
 #endif
 
-void lcd_fill(rt_uint32_t *src, rt_uint32_t *dest, rt_uint32_t num)
+void lcd_fill(uint32_t *src, uint32_t *dest, uint32_t num)
 {
     rt_memcpy(dest, src, num); //fill 800¡Á480 need 250ms!
 }

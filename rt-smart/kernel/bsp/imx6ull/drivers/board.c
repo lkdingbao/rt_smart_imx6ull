@@ -30,8 +30,8 @@ struct mem_desc platform_mem_desc[] = {
 };
 #else
 struct mem_desc platform_mem_desc[] = {
-    {0x10000000, 0x50000000, 0x10000000, DEVICE_MEM},
-    {0x60000000, 0x70000000, 0x60000000, NORMAL_MEM}
+    {0x00000000, 0x80000000, 0x00000000, DEVICE_MEM},
+    {0x80000000, 0xFFF00000, 0x80000000, NORMAL_MEM}
 };
 #endif
 
@@ -50,7 +50,9 @@ void idle_wfi(void)
  * This function will initialize board
  */
 
+#ifdef RT_USING_SMART
 rt_mmu_info mmu_info;
+#endif
 
 extern size_t MMUTable[];
 
@@ -63,6 +65,7 @@ rt_region_t init_page_region = {
 
 void rt_hw_board_init(void)
 {
+#ifdef RT_USING_SMART
 #ifdef RT_USING_USERSPACE
     rt_hw_mmu_map_init(&mmu_info, (void*)0xf0000000, 0x10000000, MMUTable, PV_OFFSET);
 
@@ -73,7 +76,8 @@ void rt_hw_board_init(void)
 #else
     rt_hw_mmu_map_init(&mmu_info, (void*)0x80000000, 0x10000000, MMUTable, 0);
     rt_hw_mmu_ioremap_init(&mmu_info, (void*)0x80000000, 0x10000000);
-#endif
+#endif //#ifdef RT_USING_USERSPACE
+#endif //#ifdef RT_USING_SMART
 
     SystemClockInit();
 

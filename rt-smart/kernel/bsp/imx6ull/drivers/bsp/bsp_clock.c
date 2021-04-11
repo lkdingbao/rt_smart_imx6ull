@@ -127,9 +127,8 @@ void BOARD_DelayInit(void)
 {
     GPT_Type *_GPT = RT_NULL;
 
-#ifdef RT_USING_USERSPACE
     _g_gpt1_vbase = _P2V(_g_gpt1_vbase);
-#endif
+
     _GPT = (GPT_Type*)_g_gpt1_vbase;
 
     _GPT->CR = 0;
@@ -156,11 +155,9 @@ void BOARD_DelayInit(void)
 
 void SystemClockInit(void)
 {
-#ifdef RT_USING_USERSPACE
     _g_ccm_vbase = (uint32_t*)_P2V(_g_ccm_vbase);
     _g_ccm_analog_vbase = (uint32_t*)_P2V(_g_ccm_analog_vbase);
     _g_pmu_vbase = (uint32_t*)_P2V(_g_pmu_vbase);
-#endif
 
     BOARD_BootClockRUN();
     BOARD_DelayInit();

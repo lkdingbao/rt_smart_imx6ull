@@ -11,7 +11,9 @@
 #include <rthw.h>
  
 #include <board.h>
+#ifdef RT_USING_LWP
 #include <lwp.h>
+#endif
  
 #include "__def.h"
 #include "realview.h"
