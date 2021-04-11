@@ -39,7 +39,7 @@
  *
  * @param base ELCDIF peripheral base address
  */
-uint32_t ELCDIF_GetInstance(LCDIF_Type *base);
+static uint32_t ELCDIF_GetInstance(LCDIF_Type *base);
 
 /*******************************************************************************
  * Variables
@@ -84,7 +84,7 @@ elcdif_pixel_format_reg_t s_pixelFormatReg[] = {
 /*******************************************************************************
  * Codes
  ******************************************************************************/
-uint32_t ELCDIF_GetInstance(LCDIF_Type *base)
+static uint32_t ELCDIF_GetInstance(LCDIF_Type *base)
 {
     uint32_t instance;
 
@@ -247,4 +247,9 @@ void ELCDIF_SetAlphaSurfaceBlendConfig(LCDIF_Type *base, const elcdif_as_blend_c
     }
 
     base->AS_CTRL = reg;
+}
+
+void _fsl_elcdif_noused_function(void)
+{
+    ELCDIF_GetInstance(0);
 }

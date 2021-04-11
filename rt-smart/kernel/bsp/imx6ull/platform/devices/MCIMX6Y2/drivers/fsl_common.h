@@ -52,8 +52,6 @@ do \
 } while(0);
 #endif
 
-#define FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL 1
-
 #include "fsl_device_registers.h"
 
 /*!

@@ -408,7 +408,6 @@ typedef struct _enet_buffer_config
     volatile enet_tx_bd_struct_t *txBdStartAddrAlign; /*!< Aligned transmit buffer descriptor start address. */
     uint8_t *rxBufferAlign;                           /*!< Receive data buffer start address. */
     uint8_t *txBufferAlign;                           /*!< Transmit data buffer start address. */
-    uint32_t pvOffset;                                /*!< add this value to get phys address. by liang */
 } enet_buffer_config_t;
 
 #ifdef ENET_ENHANCEDBUFFERDESCRIPTOR_MODE
@@ -542,7 +541,6 @@ struct _enet_handle
     enet_ptp_time_data_ring_t rxPtpTsDataRing;     /*!< Receive PTP 1588 time stamp data ring buffer. */
     enet_ptp_time_data_ring_t txPtpTsDataRing;     /*!< Transmit PTP 1588 time stamp data ring buffer. */
 #endif                                             /* ENET_ENHANCEDBUFFERDESCRIPTOR_MODE */
-    uint32_t pvOffset;                         /*!< add this value to get phys address. by liang */
 };
 
 /*******************************************************************************

@@ -50,10 +50,14 @@
 #define PHY_ID1_REG 0x02U               /*!< The PHY ID one register. */
 #define PHY_ID2_REG 0x03U               /*!< The PHY ID two register. */
 #define PHY_AUTONEG_ADVERTISE_REG 0x04U /*!< The PHY auto-negotiate advertise register. */
-#define PHY_CONTROL1_REG 0x1FU          /*!< The PHY control one register. */
+#define PHY_CONTROL1_REG 0x1EU          /*!< The PHY control one register. */
 #define PHY_CONTROL2_REG 0x1FU          /*!< The PHY control two register. */
 
+#ifdef RT_USING_LAN8720
 #define PHY_CONTROL_ID1 0x07U /*!< The PHY ID1*/
+#else
+#define PHY_CONTROL_ID1 0x22U /*!< The PHY ID1*/
+#endif
 
 /*! @brief Defines the mask flag in basic control register. */
 #define PHY_BCTL_DUPLEX_MASK 0x0100U          /*!< The PHY duplex bit mask. */
@@ -71,6 +75,14 @@
 #define PHY_CTL1_10FULLDUPLEX_MASK 0x0005U  /*!< The PHY 10M full duplex mask. */
 #define PHY_CTL1_100FULLDUPLEX_MASK 0x0006U /*!< The PHY 100M full duplex mask. */
 #define PHY_CTL1_SPEEDUPLX_MASK 0x0007U     /*!< The PHY speed and duplex mask. */
+
+#ifdef RT_USING_LAN8720
+/*!@brief Defines the mask flag of operation mode in control two register*/
+#define PHY_CTL2_10BASE_MASK 0x0004U
+#define PHY_CTL2_100BASE_MASK 0x0008U
+#define PHY_CTL2_SPEED_MASK (PHY_CTL2_10BASE_MASK|PHY_CTL2_100BASE_MASK)
+#define PHY_CTL2_DUPLEX_MASK 0x0010U
+#endif
 
 /*! @brief Defines the mask flag in basic status register. */
 #define PHY_BSTATUS_LINKSTATUS_MASK 0x0004U  /*!< The PHY link status mask. */

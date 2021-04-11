@@ -68,7 +68,9 @@ status_t PHY_Init(ENET_Type *base, uint32_t phyAddr, uint32_t srcClock_Hz)
     uint32_t counter = PHY_TIMEOUT_COUNT;
     uint32_t idReg = 0;
     status_t result = kStatus_Success;
+#if !(defined(FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL) && FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL)
     uint32_t instance = ENET_GetInstance(base);
+#endif /* FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL */
     uint32_t timeDelay;
 
 #if !(defined(FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL) && FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL)
@@ -299,12 +301,22 @@ status_t PHY_GetLinkSpeedDuplex(ENET_Type *base, uint32_t phyAddr, phy_speed_t *
     status_t result = kStatus_Success;
     uint32_t data, ctlReg;
 
+#ifdef RT_USING_LAN8720
+    /* Read the control two register. */
+    result = PHY_Read(base, phyAddr, PHY_CONTROL2_REG, &ctlReg);
+    if (result == kStatus_Success)
+    {
+        data = ctlReg & PHY_CTL2_DUPLEX_MASK;
+        *duplex = (data) ? kPHY_FullDuplex : kPHY_HalfDuplex;
+
+        data = ctlReg & PHY_CTL2_SPEED_MASK;
+        *speed = (PHY_CTL2_100BASE_MASK == data) ? kPHY_Speed100M : kPHY_Speed10M;
+    }
+#else
     /* Read the control two register. */
     result = PHY_Read(base, phyAddr, PHY_CONTROL1_REG, &ctlReg);
     if (result == kStatus_Success)
     {
-        ctlReg >>= 2; //for lan8720a. by liang
-
         data = ctlReg & PHY_CTL1_SPEEDUPLX_MASK;
         if ((PHY_CTL1_10FULLDUPLEX_MASK == data) || (PHY_CTL1_100FULLDUPLEX_MASK == data))
         {
@@ -328,6 +340,7 @@ status_t PHY_GetLinkSpeedDuplex(ENET_Type *base, uint32_t phyAddr, phy_speed_t *
             *speed = kPHY_Speed10M;
         }
     }
+#endif //#ifdef RT_USING_LAN8720
 
     return result;
 }

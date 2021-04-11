@@ -113,6 +113,36 @@ rt_uint32_t gpio_read(GPIO_Type *port, rt_uint32_t pin)
     return ((port->PSR >> pin) & 0x1);
 }
 
+void gpio_config(rt_uint32_t pn, gpio_pin_config_t *config)
+{
+    rt_uint32_t paddr, vaddr;
+    rt_uint8_t port_num, pin_num;
+
+    RT_ASSERT(RT_NULL != config);
+
+    port_num = GET_PORT_FIELD(pn);
+    pin_num = GET_PIN_FIELD(pn);
+
+    paddr = GET_GPIO_BASE_ADDR(port_num);
+    vaddr = platform_get_periph_vaddr((rt_uint32_t)paddr);
+
+    gpio_set_mode((GPIO_Type*)vaddr, pin_num, config);
+}
+
+void gpio_output(rt_uint32_t pn, rt_uint32_t lvl)
+{
+    rt_uint32_t paddr, vaddr;
+    rt_uint8_t port_num, pin_num;
+
+    port_num = GET_PORT_FIELD(pn);
+    pin_num = GET_PIN_FIELD(pn);
+
+    paddr = GET_GPIO_BASE_ADDR(port_num);
+    vaddr = platform_get_periph_vaddr((rt_uint32_t)paddr);
+
+    gpio_write((GPIO_Type*)vaddr, pin_num, lvl&0x1);
+}
+
 void gpio_easy_set_output_mode(rt_uint32_t pin)
 {
     gpio_pin_config_t config;
@@ -134,6 +164,6 @@ void gpio_easy_set_output_mode(rt_uint32_t pin)
 void gpio_easy_write(rt_uint32_t lvl)
 {
     /* no need to check! is only for test! */
-    gpio_write((GPIO_Type*)_s_gpio_last_vaddr, _s_gpio_last_pin, lvl);
+    gpio_write((GPIO_Type*)_s_gpio_last_vaddr, _s_gpio_last_pin, lvl&0x1);
 }
 

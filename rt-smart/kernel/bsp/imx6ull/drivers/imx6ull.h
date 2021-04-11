@@ -48,6 +48,16 @@ rt_inline rt_uint32_t platform_get_periph_vaddr(rt_uint32_t paddr)
 #endif
 }
 
+rt_inline uint32_t mem_map_v2p(uint32_t virt)
+{
+    return virt + PV_OFFSET;
+}
+
+rt_inline uint32_t mem_map_p2v(uint32_t phys)
+{
+    return phys - PV_OFFSET;
+}
+
 #define GIC_IRQ_START   0
 
 #define GIC_ACK_INTID_MASK  0x000003ff

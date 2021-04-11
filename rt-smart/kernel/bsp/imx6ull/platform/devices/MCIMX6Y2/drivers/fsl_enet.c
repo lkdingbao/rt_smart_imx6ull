@@ -33,6 +33,17 @@
 #include "fsl_cache.h"
 #endif /* FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL */
 
+#ifdef RT_USING_USERSPACE
+#include "imx6ull.h"
+#endif
+
+#ifdef RT_USING_LWIP
+#include "lwipopts.h"
+
+/* parameter type is just a form! */
+extern uint16_t pbuf_copy_partial(void *buf, void *dataptr, uint16_t len, uint16_t offset);
+#endif
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -159,8 +170,7 @@ static void ENET_SetHandler(ENET_Type *base,
 static void ENET_SetTxBufferDescriptors(volatile enet_tx_bd_struct_t *txBdStartAlign,
                                         uint8_t *txBuffStartAlign,
                                         uint32_t txBuffSizeAlign,
-                                        uint32_t txBdNumber,
-                                        uint32_t pvOffset);
+                                        uint32_t txBdNumber);
 
 /*!
  * @brief Set ENET MAC receive buffer descriptors.
@@ -177,7 +187,6 @@ static void ENET_SetRxBufferDescriptors(volatile enet_rx_bd_struct_t *rxBdStartA
                                         uint8_t *rxBuffStartAlign,
                                         uint32_t rxBuffSizeAlign,
                                         uint32_t rxBdNumber,
-                                        uint32_t pvOffset,
                                         bool enableInterrupt);
 
 /*!
@@ -276,13 +285,16 @@ uint32_t ENET_GetInstance(ENET_Type *base)
     /* Find the instance index from base address mappings. */
     for (instance = 0; instance < ARRAY_SIZE(s_enetBases); instance++)
     {
+#ifdef RT_USING_USERSPACE
+        if (s_enetBases[instance] == rt_hw_kernel_virt_to_phys(base))
+#else
         if (s_enetBases[instance] == base)
+#endif
         {
             break;
         }
     }
 
-    instance = 2; //return ENET2 index
     assert(instance < ARRAY_SIZE(s_enetBases));
 
     return instance;
@@ -334,8 +346,9 @@ void ENET_Init(ENET_Type *base,
         assert(bufferConfig->rxBuffSizeAlign * bufferConfig->rxBdNumber > config->rxMaxFrameLen);
     }
 
+#if !(defined(FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL) && FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL)
     uint32_t instance = ENET_GetInstance(base);
-    (void)instance;
+#endif /* FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL */
 
 #if !(defined(FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL) && FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL)
     /* Ungate ENET clock. */
@@ -347,11 +360,11 @@ void ENET_Init(ENET_Type *base,
 
     /* Initializes the ENET transmit buffer descriptors. */
     ENET_SetTxBufferDescriptors(bufferConfig->txBdStartAddrAlign, bufferConfig->txBufferAlign,
-                                bufferConfig->txBuffSizeAlign, bufferConfig->txBdNumber, bufferConfig->pvOffset);
+                                bufferConfig->txBuffSizeAlign, bufferConfig->txBdNumber);
 
     /* Initializes the ENET receive buffer descriptors. */
     ENET_SetRxBufferDescriptors(bufferConfig->rxBdStartAddrAlign, bufferConfig->rxBufferAlign,
-                                bufferConfig->rxBuffSizeAlign, bufferConfig->rxBdNumber, bufferConfig->pvOffset,
+                                bufferConfig->rxBuffSizeAlign, bufferConfig->rxBdNumber,
                                 !!(config->interrupt & (kENET_RxFrameInterrupt | kENET_RxBufferInterrupt)));
 
     /* Initializes the ENET MAC controller. */
@@ -359,9 +372,6 @@ void ENET_Init(ENET_Type *base,
 
     /* Set all buffers or data in handler for data transmit/receive process. */
     ENET_SetHandler(base, handle, config, bufferConfig);
-
-    /* Set address map offset. by liang */
-    handle->pvOffset = bufferConfig->pvOffset;
 }
 
 void ENET_Deinit(ENET_Type *base)
@@ -392,8 +402,9 @@ static void ENET_SetHandler(ENET_Type *base,
                             const enet_config_t *config,
                             const enet_buffer_config_t *bufferConfig)
 {
+#if 0 //not used!
     uint32_t instance = ENET_GetInstance(base);
-    (void)instance;
+#endif
 
     memset(handle, 0, sizeof(enet_handle_t));
 
@@ -404,6 +415,7 @@ static void ENET_SetHandler(ENET_Type *base,
     handle->rxBuffSizeAlign = bufferConfig->rxBuffSizeAlign;
     handle->txBuffSizeAlign = bufferConfig->txBuffSizeAlign;
 
+#if 0 //use intr user-defined!
     /* Save the handle pointer in the global variables. */
     s_ENETHandle[instance] = handle;
 
@@ -411,24 +423,23 @@ static void ENET_SetHandler(ENET_Type *base,
     if (config->interrupt & ENET_TX_INTERRUPT)
     {
         s_enetTxIsr = ENET_TransmitIRQHandler;
-        (void)(s_enetTxIrqId); //EnableIRQ(s_enetTxIrqId[instance]);
+        EnableIRQ(s_enetTxIrqId[instance]);
     }
     if (config->interrupt & ENET_RX_INTERRUPT)
     {
         s_enetRxIsr = ENET_ReceiveIRQHandler;
-        (void)(s_enetRxIrqId); //EnableIRQ(s_enetRxIrqId[instance]);
+        EnableIRQ(s_enetRxIrqId[instance]);
     }
     if (config->interrupt & ENET_ERR_INTERRUPT)
     {
         s_enetErrIsr = ENET_ErrorIRQHandler;
-        (void)(s_enetErrIrqId); //EnableIRQ(s_enetErrIrqId[instance]);
+        EnableIRQ(s_enetErrIrqId[instance]);
     }
-
-    //not finished! by liang
-    extern void ENET2_DriverIRQHandler(void);
-
-    rt_hw_interrupt_install(s_enetTxIrqId[instance], (rt_isr_handler_t)ENET2_DriverIRQHandler, NULL, "enet2");
-    rt_hw_interrupt_umask(s_enetTxIrqId[instance]);
+#else
+    (void)s_enetTxIrqId;
+    (void)s_enetRxIrqId;
+    (void)s_enetErrIrqId;
+#endif
 }
 
 static void ENET_SetMacController(ENET_Type *base,
@@ -518,8 +529,13 @@ static void ENET_SetMacController(ENET_Type *base,
     }
 
     /* Initializes transmit buffer descriptor rings start address, two start address should be aligned. */
-    base->TDSR = (uint32_t)bufferConfig->txBdStartAddrAlign + bufferConfig->pvOffset; //use phys address
-    base->RDSR = (uint32_t)bufferConfig->rxBdStartAddrAlign + bufferConfig->pvOffset; //use phys address
+#ifdef RT_USING_USERSPACE
+    base->TDSR = mem_map_v2p((uint32_t)bufferConfig->txBdStartAddrAlign);
+    base->RDSR = mem_map_v2p((uint32_t)bufferConfig->rxBdStartAddrAlign);
+#else
+    base->TDSR = (uint32_t)bufferConfig->txBdStartAddrAlign;
+    base->RDSR = (uint32_t)bufferConfig->rxBdStartAddrAlign;
+#endif
     /* Initializes the maximum buffer size, the buffer size should be aligned. */
     base->MRBR = bufferConfig->rxBuffSizeAlign;
 
@@ -564,8 +580,7 @@ static void ENET_SetMacController(ENET_Type *base,
 static void ENET_SetTxBufferDescriptors(volatile enet_tx_bd_struct_t *txBdStartAlign,
                                         uint8_t *txBuffStartAlign,
                                         uint32_t txBuffSizeAlign,
-                                        uint32_t txBdNumber,
-                                        uint32_t pvOffset)
+                                        uint32_t txBdNumber)
 {
     assert(txBdStartAlign);
     assert(txBuffStartAlign);
@@ -576,7 +591,12 @@ static void ENET_SetTxBufferDescriptors(volatile enet_tx_bd_struct_t *txBdStartA
     for (count = 0; count < txBdNumber; count++)
     {
         /* Set data buffer address. */
-        curBuffDescrip->buffer = (uint8_t *)((uint32_t)&txBuffStartAlign[count * txBuffSizeAlign] + pvOffset);
+#ifdef RT_USING_USERSPACE
+        uint32_t physAddr = mem_map_v2p((uint32_t)&txBuffStartAlign[count * txBuffSizeAlign]);
+        curBuffDescrip->buffer = (uint8_t *)(physAddr);
+#else
+        curBuffDescrip->buffer = (uint8_t *)((uint32_t)&txBuffStartAlign[count * txBuffSizeAlign]);
+#endif
         /* Initializes data length. */
         curBuffDescrip->length = 0;
         /* Sets the crc. */
@@ -605,7 +625,6 @@ static void ENET_SetRxBufferDescriptors(volatile enet_rx_bd_struct_t *rxBdStartA
                                         uint8_t *rxBuffStartAlign,
                                         uint32_t rxBuffSizeAlign,
                                         uint32_t rxBdNumber,
-                                        uint32_t pvOffset,
                                         bool enableInterrupt)
 {
     assert(rxBdStartAlign);
@@ -618,7 +637,12 @@ static void ENET_SetRxBufferDescriptors(volatile enet_rx_bd_struct_t *rxBdStartA
     for (count = 0; count < rxBdNumber; count++)
     {
         /* Set data buffer and the length. */
-        curBuffDescrip->buffer = (uint8_t *)((uint32_t)&rxBuffStartAlign[count * rxBuffSizeAlign] + pvOffset);
+#ifdef RT_USING_USERSPACE
+        uint32_t physAddr = mem_map_v2p((uint32_t)&rxBuffStartAlign[count * rxBuffSizeAlign]);
+        curBuffDescrip->buffer = (uint8_t *)(physAddr);
+#else
+        curBuffDescrip->buffer = (uint8_t *)((uint32_t)&rxBuffStartAlign[count * rxBuffSizeAlign]);
+#endif
         curBuffDescrip->length = 0;
 
         /* Initializes the buffer descriptors with empty bit. */
@@ -928,6 +952,7 @@ status_t ENET_ReadFrame(ENET_Type *base, enet_handle_t *handle, uint8_t *data, u
     bool isLastBuff = false;
     volatile enet_rx_bd_struct_t *curBuffDescrip = handle->rxBdCurrent;
     status_t result = kStatus_Success;
+    uint32_t virtAddr;
 
     /* For data-NULL input, only update the buffer descriptor. */
     if (!data)
@@ -951,17 +976,21 @@ status_t ENET_ReadFrame(ENET_Type *base, enet_handle_t *handle, uint8_t *data, u
     }
     else
     {
+        virtAddr = (uint32_t)curBuffDescrip->buffer;
+#ifdef RT_USING_USERSPACE
+        virtAddr = mem_map_p2v(virtAddr);
+#endif
         /* A frame on one buffer or several receive buffers are both considered. */
 #if defined(FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL) && FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL
         /* Add the cache invalidate maintain. */
-        DCACHE_InvalidateByRange((uint32_t)curBuffDescrip->buffer, handle->rxBuffSizeAlign);
+        DCACHE_InvalidateByRange(virtAddr, handle->rxBuffSizeAlign);
 #endif  /* FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL */
 #ifdef ENET_ENHANCEDBUFFERDESCRIPTOR_MODE
         enet_ptp_time_data_t ptpTimestamp;
         bool isPtpEventMessage = false;
 
         /* Parse the PTP message according to the header message. */
-        isPtpEventMessage = ENET_Ptp1588ParseFrame(curBuffDescrip->buffer, &ptpTimestamp, false);
+        isPtpEventMessage = ENET_Ptp1588ParseFrame((uint8_t*)virtAddr, &ptpTimestamp, false);
 #endif /* ENET_ENHANCEDBUFFERDESCRIPTOR_MODE */
 
         while (!isLastBuff)
@@ -975,7 +1004,7 @@ status_t ENET_ReadFrame(ENET_Type *base, enet_handle_t *handle, uint8_t *data, u
                 {
                     /* Copy the frame to user's buffer without FCS. */
                     len = curBuffDescrip->length - offset;
-                    memcpy(data + offset, curBuffDescrip->buffer, len);
+                    memcpy(data + offset, (void*)virtAddr, len);
 #ifdef ENET_ENHANCEDBUFFERDESCRIPTOR_MODE
                     /* Store the PTP 1588 timestamp for received PTP event frame. */
                     if (isPtpEventMessage)
@@ -1005,7 +1034,7 @@ status_t ENET_ReadFrame(ENET_Type *base, enet_handle_t *handle, uint8_t *data, u
                 {
                     break;
                 }
-                memcpy(data + offset, curBuffDescrip->buffer, handle->rxBuffSizeAlign);
+                memcpy(data + offset, (void*)virtAddr, handle->rxBuffSizeAlign);
                 offset += handle->rxBuffSizeAlign;
 
                 /* Updates the receive buffer descriptors. */
@@ -1014,9 +1043,13 @@ status_t ENET_ReadFrame(ENET_Type *base, enet_handle_t *handle, uint8_t *data, u
 
             /* Get the current buffer descriptor. */
             curBuffDescrip = handle->rxBdCurrent;
+            virtAddr = (uint32_t)curBuffDescrip->buffer;
+#ifdef RT_USING_USERSPACE
+            virtAddr = mem_map_p2v(virtAddr);
+#endif
 #if defined(FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL) && FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL
             /* Add the cache invalidate maintain. */
-            DCACHE_InvalidateByRange((uint32_t)curBuffDescrip->buffer, handle->rxBuffSizeAlign);
+            DCACHE_InvalidateByRange(virtAddr, handle->rxBuffSizeAlign);
 #endif  /* FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL */        
         }
     }
@@ -1056,7 +1089,7 @@ status_t ENET_SendFrame(ENET_Type *base, enet_handle_t *handle, const uint8_t *d
     volatile enet_tx_bd_struct_t *curBuffDescrip = handle->txBdCurrent;
     uint32_t len = 0;
     uint32_t sizeleft = 0;
-    uint32_t pvOffset =  handle->pvOffset;
+    uint32_t virtAddr;
 
     /* Check if the transmit buffer is ready. */
     if (curBuffDescrip->control & ENET_BUFFDESCRIPTOR_TX_READY_MASK)
@@ -1072,7 +1105,16 @@ status_t ENET_SendFrame(ENET_Type *base, enet_handle_t *handle, const uint8_t *d
     if (handle->txBuffSizeAlign >= length)
     {
         /* Copy data to the buffer for uDMA transfer. */
-        memcpy(curBuffDescrip->buffer - pvOffset, data, length);
+#ifdef RT_USING_USERSPACE
+        virtAddr = mem_map_p2v((uint32_t)curBuffDescrip->buffer);
+#else
+        virtAddr = (uint32_t)curBuffDescrip->buffer;
+#endif
+#ifdef RT_USING_LWIP
+        pbuf_copy_partial((void*)data, (void*)virtAddr, length, 0);
+#else
+        memcpy((void*)virtAddr, data, length);
+#endif
 
         /* Set data length. */
         curBuffDescrip->length = length;
@@ -1101,7 +1143,7 @@ status_t ENET_SendFrame(ENET_Type *base, enet_handle_t *handle, const uint8_t *d
         }
 #if defined(FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL) && FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL
         /* Add the cache clean maintain. */
-        DCACHE_CleanByRange((uint32_t)curBuffDescrip->buffer - pvOffset, length);
+        DCACHE_CleanByRange(virtAddr, length);
 #endif  /* FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL */
         /* Active the transmit buffer descriptor. */
         base->TDAR = ENET_TDAR_TDAR_MASK;
@@ -1138,7 +1180,16 @@ status_t ENET_SendFrame(ENET_Type *base, enet_handle_t *handle, const uint8_t *d
             if (sizeleft > handle->txBuffSizeAlign)
             {
                 /* Data copy. */
-                memcpy(curBuffDescrip->buffer - pvOffset, data + len, handle->txBuffSizeAlign);
+#ifdef RT_USING_USERSPACE
+                virtAddr = mem_map_p2v((uint32_t)curBuffDescrip->buffer);
+#else
+                virtAddr = (uint32_t)curBuffDescrip->buffer;
+#endif
+#ifdef RT_USING_LWIP
+                pbuf_copy_partial((void*)(data + len), (void*)virtAddr, handle->txBuffSizeAlign, 0);
+#else
+                memcpy((void*)virtAddr, data + len, handle->txBuffSizeAlign);
+#endif
                 /* Data length update. */
                 curBuffDescrip->length = handle->txBuffSizeAlign;
                 len += handle->txBuffSizeAlign;
@@ -1147,20 +1198,29 @@ status_t ENET_SendFrame(ENET_Type *base, enet_handle_t *handle, const uint8_t *d
                 curBuffDescrip->control |= ENET_BUFFDESCRIPTOR_TX_READY_MASK;
 #if defined(FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL) && FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL
                 /* Add the cache clean maintain. */
-                DCACHE_CleanByRange((uint32_t)curBuffDescrip->buffer - pvOffset, handle->txBuffSizeAlign);
+                DCACHE_CleanByRange(virtAddr, handle->txBuffSizeAlign);
 #endif  /* FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL */                
                 /* Active the transmit buffer descriptor*/
                 base->TDAR = ENET_TDAR_TDAR_MASK;
             }
             else
             {
-                memcpy(curBuffDescrip->buffer - pvOffset, data + len, sizeleft);
+#ifdef RT_USING_USERSPACE
+                virtAddr = mem_map_p2v((uint32_t)curBuffDescrip->buffer);
+#else
+                virtAddr = (uint32_t)curBuffDescrip->buffer;
+#endif
+#ifdef RT_USING_LWIP
+                pbuf_copy_partial((void*)(data + len), (void*)virtAddr, sizeleft, 0);
+#else
+                memcpy((void*)virtAddr, data + len, sizeleft);
+#endif
                 curBuffDescrip->length = sizeleft;
                 /* Set Last buffer wrap flag. */
                 curBuffDescrip->control |= ENET_BUFFDESCRIPTOR_TX_READY_MASK | ENET_BUFFDESCRIPTOR_TX_LAST_MASK;
 #if defined(FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL) && FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL                
                 /* Add the cache clean maintain. */
-                DCACHE_CleanByRange((uint32_t)curBuffDescrip->buffer - pvOffset, sizeleft);
+                DCACHE_CleanByRange(virtAddr, sizeleft);
 #endif  /* FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL */               
                 /* Active the transmit buffer descriptor. */
                 base->TDAR = ENET_TDAR_TDAR_MASK;

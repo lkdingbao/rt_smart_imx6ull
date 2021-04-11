@@ -52,13 +52,13 @@ static const clock_ip_name_t s_gpioClock[] = GPIO_CLOCKS;
 * @param base    GPIO peripheral base pointer(PTA, PTB, PTC, etc.)
 * @retval GPIO instance
 */
-uint32_t GPIO_GetInstance(GPIO_Type *base);
+static uint32_t GPIO_GetInstance(GPIO_Type *base);
 
 /*******************************************************************************
  * Code
  ******************************************************************************/
 
-uint32_t GPIO_GetInstance(GPIO_Type *base)
+static uint32_t GPIO_GetInstance(GPIO_Type *base)
 {
     uint32_t instance;
 
@@ -153,4 +153,9 @@ void GPIO_SetPinInterruptConfig(GPIO_Type* base, uint32_t pin, gpio_interrupt_mo
         default:
             break;
     }
+}
+
+void _fsl_gpio_noused_function(void)
+{
+    GPIO_GetInstance(0);
 }
