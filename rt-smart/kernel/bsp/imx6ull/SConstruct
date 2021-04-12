@@ -9,12 +9,17 @@ else:
 
 # set RTT_ROOT
 if not os.getenv("RTT_ROOT"): 
-    RTT_ROOT="rt-smart"
+    RTT_ROOT="rt-thread"
 
 sys.path = sys.path + [os.path.join(RTT_ROOT, 'tools')]
 from building import *
 
-TARGET = 'rtthread.' + rtconfig.TARGET_EXT
+PROJ_TYPE   = os.getenv('RTT_PROJ') or 'rt-thread'
+
+if   PROJ_TYPE == 'rt-smart':
+    TARGET = 'rtsmart.' + rtconfig.TARGET_EXT
+elif PROJ_TYPE == 'rt-thread':
+    TARGET = 'rtthread.' + rtconfig.TARGET_EXT
 
 DefaultEnvironment(tools=[])
 env = Environment(tools = ['mingw'],

@@ -1,5 +1,8 @@
 @set RTT_ROOT=%cd%\..\..\..\.\kernel
 
+:: only support rt-smart and rt-thread
+@set RTT_PROJ=rt-smart
+
 @set RTT_CC=gcc
 @set RTT_CC_PREFIX=arm-linux-musleabi-
 

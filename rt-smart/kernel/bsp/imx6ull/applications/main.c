@@ -42,8 +42,8 @@ int main(void)
     rt_console_set_device("clcd");
     rt_show_version();
 
-    LOG_D("rt-smart on imx6ull");
-    LOG_D("build %s %s", __DATE__, __TIME__);
+    LOG_D("board: i.mx 6ull");
+    LOG_D("build: %s %s", __DATE__, __TIME__);
 
     /*
      * redirect the console will cause a error.
@@ -53,10 +53,10 @@ int main(void)
      *      while rt-smart is no-error.
      */
     rt_console_set_device(RT_CONSOLE_DEVICE_NAME);
-
-    LOG_D("rt-smart on imx6ull");
-    LOG_D("build %s %s", __DATE__, __TIME__);
 #endif
+
+    LOG_D("board: i.mx 6ull");
+    LOG_D("build: %s %s", __DATE__, __TIME__);
 
 #ifdef RT_FUNC_SELF_TEST
     _self_test();

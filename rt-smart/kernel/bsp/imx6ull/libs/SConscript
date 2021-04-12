@@ -6,6 +6,9 @@ list = os.listdir(cwd)
 CPPPATH = [cwd]
 objs = []
 
+if not GetDepend('RT_USING_LVGL'):
+    SrcRemove(list, ['lvgl'])
+
 group = DefineGroup('Libs', src, depend = [''], CPPPATH = CPPPATH)
 
 for d in list:

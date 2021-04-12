@@ -9,41 +9,57 @@
 |变量名|变量值|
 |:-:|:-|
 |`BSP_ROOT`|`.`|
-|`RTT_ROOT`|`盘符:\...\rt-smart\kernel`|
 
 #### 2. 添加编译工具路径
 
-修改`.\rt-smart\kernel\bsp\imx6ull\smart-env.bat`文件中的`RTT_EXEC_PATH`  
+修改 `.\rt-smart\kernel\bsp\imx6ull\envconfig.bat` 文件中的 `RTT_EXEC_PATH`  
 值设置成编译工具所在的路径  
 
+同时设置 `RTT_PROJ` 的值为 `rt-smart`  
+
 ```
+@set RTT_ROOT=%cd%\..\..\..\.\kernel
+
+:: only support rt-smart and rt-thread
+@set RTT_PROJ=rt-smart
+
 @set RTT_CC=gcc
-@set RTT_EXEC_PATH=D:\gnu_gcc\install_arm-linux-musleabi_for_i686-w64-mingw32\bin
 @set RTT_CC_PREFIX=arm-linux-musleabi-
+
+@set RTT_EXEC_PATH=%ENV_ROOT%\tools\gnu_gcc\arm_gcc\musleabi\bin
 @set PATH=%RTT_EXEC_PATH%;%ENV_ROOT%\tools\gnu_gcc\arm_gcc\mingw\bin;%PATH%
+
+@echo config finished.
 ```
 
 ### 二、源码修改
 
-源码基于官网上的`rt-smart-20201125`版本  
+源码基于官网上的 `rt-smart-20201125` 版本  
 对以下两处进行修改  
 
-1. `.\rt-smart\kernel\libcpu\arm\cortex-a\mmu.h`文件第45行添加  
+1. `.\rt-smart\kernel\libcpu\arm\cortex-a\mmu.h` 文件第 45 行添加  
 
 ```c
 #define NORMAL_WT_MEM  (SHARED|AP_RW|DOMAIN0|MEMWT|DESC_SEC)
 ```
 
-2. `.\rt-smart\kernel\include\rthw.h`文件第152行添加  
+2. `.\rt-smart\kernel\include\rthw.h` 文件第 152 行添加  
 
 ```c
 void rt_hw_ms_delay(rt_uint32_t ms);
 ```
 
-3. `.\rt-smart\kernel\components\drivers\spi\spi_core.c`文件第56行添加  
+3. `.\rt-smart\kernel\components\drivers\spi\spi_core.c` 文件第 56 行添加  
 
-```
+```c
 device->bus->owner = device;
+```
+
+4. `.\rt-smart\kernel\components\drivers\include\drivers\i2c.h`  文件第 26 行添加  
+
+```c
+#define RT_I2C_REG_ADDR_8BIT    (0u << 8)
+#define RT_I2C_REG_ADDR_16BIT   (1u << 8)
 ```
 
 ### 二、支持功能
@@ -51,27 +67,30 @@ device->bus->owner = device;
 |功能项|是否支持|备注|
 |:-:|:-:|:-|
 |**下载方式**||
-|USB方式下载|√|使用100ask.org的下载软件|
-|SD方式下载|√|需要修改正点原子的imxdownload工具|
+|USB 方式下载|√|使用 100ask.org 的下载软件|
+|SD 方式下载|√|需要修改正点原子的 imxdownload 工具|
 |**驱动**|||
 |UART|√||
 |I2C|√||
 |SPI|√||
 |LCD|√||
+|ENET|√||
 |**设备**|||
 |ICM20608|√||
 |PCF8574x|√||
 |GT9147|√||
+|LAN8720|√||
 |**第三方库**|||
 |LittlevGL|√|Ver 7.9.1|
+|LwIP|√|Ver 2.0.2|
 
 ### 三、测试
 
-1. 在`.\rt-smart\kernel\bsp\imx6ull\`目录下打开env工具  
+1. 在 `.\rt-smart\kernel\bsp\imx6ull\` 目录下打开 env 工具  
 
-2. 输入`smart-env.bat`，回车，配置临时环境变量  
+2. 输入 `./envconfig.bat`，回车  
 
-3. 输入`scons`进行编译，`scons -j 8`可以提高编译速度  
+3. 输入 `scons` 进行编译，`scons -j8` 可以提高编译速度  
 
 ```
 LINK rtthread.elf
@@ -89,12 +108,12 @@ Entry Point:  80010000
 scons: done building targets.
 ```
 
-4. 如果使用USB方式下载，修改启动方式拨码开关到USB启动方式（根据板卡要求设置）  
-打开100ask.org提供的下载软件，切换到专业版界面进行下载  
+4. 如果使用 USB 方式下载，修改启动方式拨码开关到 USB 启动方式（根据板卡要求设置）  
+打开 100ask.org 提供的下载软件，切换到专业版界面进行下载  
 
-5. 如果使用SD方式下载，需要修改正点原子的imxdownload工具  
+5. 如果使用 SD 方式下载，需要修改正点原子的 imxdownload 工具  
 
-打开路径`.\rt-smart\tools\imx\`下`imxdownload.c`文件  
+打开路径 `.\rt-smart\tools\imx\` 下 `imxdownload.c` 文件  
 修改以下两个宏  
 
 ```
@@ -102,4 +121,11 @@ scons: done building targets.
 #define IMAGE_SIZE              (2*1024*1024)   //image size
 ```
 
-编译生成可执行文件，烧写需要在Linux环境中进行（参考正点原子教程）  
+编译生成可执行文件，烧写需要在 Linux 环境中进行（参考正点原子教程）  
+
+### 四、注意事项
+
+1. 链接地址为 0x80010000 ，如若需要修改，需要同时修改 imxdownload 工具  
+
+2. 程序可不经修改完全兼容 RT-Thread ，需要修改链接选项  
+**修改 `envconfig.bat 文件即可`**  
