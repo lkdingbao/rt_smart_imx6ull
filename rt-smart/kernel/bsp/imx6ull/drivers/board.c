@@ -31,7 +31,7 @@ struct mem_desc platform_mem_desc[] = {
 #else
 struct mem_desc platform_mem_desc[] = {
     {0x00000000, 0x80000000, 0x00000000, DEVICE_MEM},
-    {0x80000000, 0xFFF00000, 0x80000000, NORMAL_MEM}
+    {0x80000000, 0x8fffffff, 0x80000000, NORMAL_MEM}
 };
 #endif
 

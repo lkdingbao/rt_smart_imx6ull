@@ -38,7 +38,7 @@ extern int __bss_end;
 #define PAGE_START      HEAP_END
 #define PAGE_END        (void*)(KERNEL_VADDR_START + 128 * 1024 * 1024)
 #else
-#define HEAP_END        (void*)(0x80000000 + 64 * 1024 * 1024)
+#define HEAP_END        (void*)(KERNEL_VADDR_START + 16 * 1024 * 1024)
 #endif
 
 void rt_hw_board_init(void);

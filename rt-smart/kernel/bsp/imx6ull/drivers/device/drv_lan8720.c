@@ -286,7 +286,7 @@ static rt_err_t _lan8720_device_init( struct skt_netdev *netdev )
 
 #if defined(ENET_MEM_BY_USER_EN) && (ENET_MEM_BY_USER_EN)
     /* This is only a test method. not used in formal occasion. */
-    _s_rxBuffDescrip = (enet_rx_bd_struct_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x0); //2K Byte, offset 0x0
+    _s_rxBuffDescrip = (enet_rx_bd_struct_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x0); //2K Byte, offset 0x0 //defined at board.c!
     _s_txBuffDescrip = (enet_tx_bd_struct_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x800); //2K Byte, offset 0x800
     _s_rxDataBuff = (uint8_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x100000); //1M Byte, offset 0x100000
     _s_txDataBuff = (uint8_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x200000); //1M Byte, offset 0x200000
