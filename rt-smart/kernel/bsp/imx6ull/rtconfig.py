@@ -86,12 +86,11 @@ if PLATFORM == 'gcc':
 
     CXXFLAGS += ' -Woverloaded-virtual -fno-exceptions -fno-rtti'
 
-DUMP_ACTION = OBJDUMP + ' -D -S $TARGET > rtt.asm\n'
+DUMP_ACTION = OBJDUMP + ' -D -S $TARGET > output.DEBUG \n'
 
-MKIMAGE_PATH = "../../../tools/imx/"
-MKIMAGE = MKIMAGE_PATH + 'mkimage.exe'
+MKIMAGE_PATH = '../../../tools/imx/'
 MKIMAGE_CFG_FILE = MKIMAGE_PATH + 'imximage.cfg.cfgtmp'
 
 POST_ACTION = OBJCPY + ' -O binary $TARGET output.bin \n' + \
               SIZE + ' $TARGET \n' + \
-              MKIMAGE + " -n " + MKIMAGE_CFG_FILE + ' -T imximage -e 0x80010000 -d output.bin output.imx \n'
+              'mkimage.exe -n ' + MKIMAGE_CFG_FILE + ' -T imximage -e 0x80010000 -d output.bin output.imx \n'
