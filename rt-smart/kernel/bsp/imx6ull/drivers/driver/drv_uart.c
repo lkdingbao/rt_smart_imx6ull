@@ -11,7 +11,7 @@
 #include <rthw.h>
 #include <rtdevice.h>
 
-#ifdef RT_USING_UART
+#ifdef RT_USING_SERIAL
 
 #include <board.h>
 #ifdef RT_USING_LWP
@@ -353,5 +353,5 @@ int rt_hw_uart_init(void)
 }
 INIT_BOARD_EXPORT(rt_hw_uart_init);
 
-#endif //#ifdef RT_USING_UART
+#endif //#ifdef RT_USING_SERIAL
 

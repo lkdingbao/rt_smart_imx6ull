@@ -7,7 +7,6 @@
 /* RT-Thread Kernel */
 
 #define RT_NAME_MAX 8
-#define RT_USING_SMART
 #define RT_ALIGN_SIZE 4
 #define RT_THREAD_PRIORITY_32
 #define RT_THREAD_PRIORITY_MAX 32
@@ -17,9 +16,6 @@
 #define RT_USING_IDLE_HOOK
 #define RT_IDLE_HOOK_LIST_SIZE 4
 #define IDLE_THREAD_STACK_SIZE 1024
-#define RT_USING_TIMER_SOFT
-#define RT_TIMER_THREAD_PRIO 4
-#define RT_TIMER_THREAD_STACK_SIZE 1024
 #define RT_DEBUG
 #define RT_DEBUG_COLOR
 
@@ -30,7 +26,6 @@
 #define RT_USING_EVENT
 #define RT_USING_MAILBOX
 #define RT_USING_MESSAGEQUEUE
-#define RT_USING_SIGNALS
 
 /* Memory Management */
 
@@ -49,15 +44,10 @@
 #define RT_CONSOLEBUF_SIZE 256
 #define RT_CONSOLE_DEVICE_NAME "uart1"
 #define RT_VER_NUM 0x40003
-#define RT_USING_CACHE
 #define ARCH_ARM
 #define ARCH_ARM_MMU
-#define RT_USING_USERSPACE
-#define KERNEL_VADDR_START 0xc0000000
-#define PV_OFFSET 0xc0000000
 #define ARCH_ARM_CORTEX_A
 #define ARCH_ARM_CORTEX_A7
-#define RT_BACKTRACE_FUNCTION_NAME
 
 /* RT-Thread Components */
 
@@ -91,21 +81,7 @@
 #define DFS_FILESYSTEMS_MAX 4
 #define DFS_FILESYSTEM_TYPES_MAX 8
 #define DFS_FD_MAX 16
-#define RT_USING_DFS_ELMFAT
-
-/* elm-chan's FatFs, Generic FAT Filesystem Module */
-
-#define RT_DFS_ELM_CODE_PAGE 437
-#define RT_DFS_ELM_WORD_ACCESS
-#define RT_DFS_ELM_USE_LFN_3
-#define RT_DFS_ELM_USE_LFN 3
-#define RT_DFS_ELM_MAX_LFN 255
-#define RT_DFS_ELM_DRIVES 2
-#define RT_DFS_ELM_MAX_SECTOR_SIZE 4096
-#define RT_DFS_ELM_REENTRANT
 #define RT_USING_DFS_DEVFS
-#define RT_USING_DFS_ROMFS
-#define RT_USING_DFS_RAMFS
 
 /* Device Drivers */
 
@@ -145,17 +121,14 @@
 /* POSIX layer and C standard library */
 
 #define RT_USING_LIBC
-#define RT_USING_MUSL
 #define RT_USING_POSIX
-#define RT_USING_POSIX_MMAP
-#define RT_USING_POSIX_TERMIOS
-#define RT_USING_POSIX_AIO
 
 /* Network */
 
 /* Socket abstraction layer */
 
 #define RT_USING_SAL
+#define SAL_INTERNET_CHECK
 
 /* protocol stack implement */
 
@@ -222,11 +195,6 @@
 
 /* Utilities */
 
-#define RT_USING_LWP
-#define RT_LWP_MAX_NR 30
-#define RT_CH_MSG_MAX_NR 1024
-#define RT_LWP_SHM_MAX_NR 64
-#define LWP_CONSOLE_INPUT_BUFFER_SIZE 1024
 
 /* RT-Thread online packages */
 
@@ -240,6 +208,9 @@
 
 /* Wiced WiFi */
 
+#define PKG_USING_NETUTILS
+#define PKG_NETUTILS_IPERF
+#define PKG_USING_NETUTILS_LATEST_VERSION
 
 /* IoT Cloud */
 
@@ -270,7 +241,9 @@
 
 /* Platform Configuration */
 
-#define SOC_CPU_MCIMX6Y2CVM05
+#define SOC_CPU_MX6
+#define CPU_MCIMX6Y2CVM05
+#define FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL 1
 
 /* Platform Driver Configuration */
 
@@ -293,13 +266,10 @@
 #define RT_USING_RGBLCD
 #define BSP_LCD_WIDTH 800
 #define BSP_LCD_HEIGHT 480
-#define RT_LCD_CONSOLE_DEBUG
-#define RT_LCD_CONSOLE_PARSER
 
 /* Platform Device Configuration */
 
 #define RT_USING_LAN8720
-#define FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL 1
 
 /* Third-party Libraries Configuration */
 

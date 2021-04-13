@@ -25,10 +25,4 @@ config RT_USING_LAN8720
     bool "Enable LAN8720"
     default y
 
-    if RT_USING_LAN8720
-        config FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL
-            int "Enable DCache"
-            default 1
-    endif
-
 endmenu

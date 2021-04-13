@@ -1,64 +1,57 @@
 menu "Platform Driver Configuration"
 
 menu "Select UART Driver"
-config RT_USING_UART
-    bool "Enable UART"
-    default y
-
-    if RT_USING_UART
-    config BSP_USING_UART1
-        bool "Enable UART1"
-        default y
-    config BSP_USING_UART2
-        bool "Enable UART2"
-        default n
-    config BSP_USING_UART3
-        bool "Enable UART3"
-        default n
-    config BSP_USING_UART4
-        bool "Enable UART4"
-        default n
-    config BSP_USING_UART5
-        bool "Enable UART5"
-        default n
-    config BSP_USING_UART6
-        bool "Enable UART6"
-        default n
-    config BSP_USING_UART7
-        bool "Enable UART7"
-        default n
-    config BSP_USING_UART8
-        bool "Enable UART8"
-        default n
+    if RT_USING_SERIAL
+        config RT_USING_UART
+            bool "Enable UART"
+            default y if RT_USING_SERIAL
+        if RT_USING_UART
+            config BSP_USING_UART1
+                bool "Enable UART1"
+                default y
+            config BSP_USING_UART2
+                bool "Enable UART2"
+                default n
+            config BSP_USING_UART3
+                bool "Enable UART3"
+                default n
+            config BSP_USING_UART4
+                bool "Enable UART4"
+                default n
+            config BSP_USING_UART5
+                bool "Enable UART5"
+                default n
+            config BSP_USING_UART6
+                bool "Enable UART6"
+                default n
+            config BSP_USING_UART7
+                bool "Enable UART7"
+                default n
+            config BSP_USING_UART8
+                bool "Enable UART8"
+                default n
+        endif
     endif
 endmenu
 
 menu "Select SPI Driver"
-config RT_USING_SPI
-    bool "Enable SPI"
-    default y
-
     if RT_USING_SPI
-    config BSP_USING_SPI1
-        bool "Enable SPI1"
-        default n
-    config BSP_USING_SPI2
-        bool "Enable SPI2"
-        default n
-    config BSP_USING_SPI3
-        bool "Enable SPI3"
-        default y
-    config BSP_USING_SPI4
-        bool "Enable SPI4"
-        default n
+        config BSP_USING_SPI1
+            bool "Enable SPI1"
+            default n
+        config BSP_USING_SPI2
+            bool "Enable SPI2"
+            default n
+        config BSP_USING_SPI3
+            bool "Enable SPI3"
+            default y
+        config BSP_USING_SPI4
+            bool "Enable SPI4"
+            default n
     endif
 endmenu
 
 menu "Select I2C Driver"
-config RT_USING_I2C
-    bool "Enable I2C"
-    default y
-
     if RT_USING_I2C
         config BSP_USING_I2C1
             bool "Enable I2C1"

@@ -64,7 +64,7 @@
  * should handle clock enable and disable for all drivers.
  */
 #if !(defined(FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL))
-#define FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL 1
+#define FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL 0
 #endif
 
 /*! @name Driver version */

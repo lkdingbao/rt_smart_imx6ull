@@ -12,7 +12,7 @@
 
 #include "skt.h"
 
-#ifdef RT_USING_UART
+#ifdef RT_USING_SERIAL
 
 #ifndef HW_UART_BUS_CLOCK
 #define HW_UART_BUS_CLOCK                   80000000
@@ -30,6 +30,6 @@
     0                                       \
 }
 
-#endif //#ifdef RT_USING_UART
+#endif //#ifdef RT_USING_SERIAL
 #endif //#ifndef __DRV_UART_H__
 

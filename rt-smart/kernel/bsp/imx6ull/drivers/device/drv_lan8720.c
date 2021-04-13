@@ -25,25 +25,26 @@
 #include "drv_lan8720.h"
 #include "skt.h"
 
+#if defined(FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL) && FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL    
+#include "fsl_cache.h"
+#endif /* FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL */
+
+#ifdef RT_USING_LWIP
+#include "lwipopts.h"
+#endif
+
 #define DBG_TAG "LAN8720"
 #define DBG_LVL DBG_LOG
 #include <rtdbg.h>
 
-#define ENET_PHY_MONITOR_EN (1)
-#define ENET_MEM_BY_USER_EN (1)
+#define ENET_PHY_MONITOR_EN 1
 
-#if defined(ENET_MEM_BY_USER_EN) && (ENET_MEM_BY_USER_EN)
-/* This is only a test method. not used in formal occasion. */
-_internal_rw enet_rx_bd_struct_t *_s_rxBuffDescrip;
-_internal_rw enet_tx_bd_struct_t *_s_txBuffDescrip;
-_internal_rw uint8_t *_s_rxDataBuff;
-_internal_rw uint8_t *_s_txDataBuff;
-#else
 _internal_rw AT_NONCACHEABLE_SECTION_ALIGN(enet_rx_bd_struct_t _s_rxBuffDescrip[ENET_RXBD_NUM], ENET_BUFF_ALIGNMENT);
 _internal_rw AT_NONCACHEABLE_SECTION_ALIGN(enet_tx_bd_struct_t _s_txBuffDescrip[ENET_TXBD_NUM], ENET_BUFF_ALIGNMENT);
-_internal_rw SDK_ALIGN(uint8_t _s_rxDataBuff[ENET_RXBD_NUM][SDK_SIZEALIGN(ENET_RXBUFF_SIZE, APP_ENET_BUFF_ALIGNMENT)], APP_ENET_BUFF_ALIGNMENT);
-_internal_rw SDK_ALIGN(uint8_t _s_txDataBuff[ENET_TXBD_NUM][SDK_SIZEALIGN(ENET_TXBUFF_SIZE, APP_ENET_BUFF_ALIGNMENT)], APP_ENET_BUFF_ALIGNMENT);
-#endif
+_internal_rw SDK_ALIGN(rt_uint8_t _s_rxDataBuff[ENET_RXBD_NUM][SDK_SIZEALIGN(ENET_FRAME_MAX_FRAMELEN, MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE))],
+          MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE));
+_internal_rw SDK_ALIGN(rt_uint8_t _s_txDataBuff[ENET_TXBD_NUM][SDK_SIZEALIGN(ENET_FRAME_MAX_FRAMELEN, MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE))],
+          MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE));
 
 _internal_rw struct skt_netdev _s_lan8720_device = {
     .name = "enet2",
@@ -86,28 +87,6 @@ static rt_err_t enet_init_clock( void )
     CLOCK_EnableClock(kCLOCK_Enet);
 
     return RT_EOK;
-}
-
-static status_t enet_check_send_flag( ENET_Type *base, uint32_t timeout )
-{
-    status_t result;
-
-    if (0 == timeout) {
-        return kStatus_Success;
-    }
-
-    result = kStatus_Timeout;
-
-    while (timeout--)
-    {
-        if (! (base->TDAR & ENET_TDAR_TDAR_MASK))
-        {
-            result = kStatus_Success;
-            break;
-        }
-	}
-
-    return result;
 }
 
 static void _enet_rx_callback( struct skt_netdev *netdev )
@@ -168,7 +147,7 @@ static struct pbuf* _imx_enet_rx( rt_device_t dev )
     struct skt_netdev *netdev = RT_NULL;
     ENET_Type *enet = RT_NULL;
     struct pbuf *pbuf = RT_NULL;
-    enet_data_error_stats_t eErrStatic;
+    static enet_data_error_stats_t eErrStatic;
     uint32_t rxlen = 0;
     status_t result;
 
@@ -198,6 +177,9 @@ static struct pbuf* _imx_enet_rx( rt_device_t dev )
     {
         ENET_GetRxErrBeforeReadFrame(&netdev->handle, &eErrStatic);
         ENET_ReadFrame(enet, &netdev->handle, RT_NULL, 0);
+
+        LOG_D("\nRxAlignErr %d", eErrStatic.statsRxAlignErr);
+        LOG_D(  "RxFcsErr   %d", eErrStatic.statsRxFcsErr);
     }
 
     ENET_EnableInterrupts(enet, kENET_RxFrameInterrupt);
@@ -284,23 +266,15 @@ static rt_err_t _lan8720_device_init( struct skt_netdev *netdev )
     ENET_Type *enet = RT_NULL;
     bool link;
 
-#if defined(ENET_MEM_BY_USER_EN) && (ENET_MEM_BY_USER_EN)
-    /* This is only a test method. not used in formal occasion. */
-    _s_rxBuffDescrip = (enet_rx_bd_struct_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x0); //2K Byte, offset 0x0 //defined at board.c!
-    _s_txBuffDescrip = (enet_tx_bd_struct_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x800); //2K Byte, offset 0x800
-    _s_rxDataBuff = (uint8_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x100000); //1M Byte, offset 0x100000
-    _s_txDataBuff = (uint8_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x200000); //1M Byte, offset 0x200000
-#endif
-
     enet_buffer_config_t buffConfig = {
         ENET_RXBD_NUM,
         ENET_TXBD_NUM,
-        SDK_SIZEALIGN(ENET_RXBUFF_SIZE, APP_ENET_BUFF_ALIGNMENT),
-        SDK_SIZEALIGN(ENET_TXBUFF_SIZE, APP_ENET_BUFF_ALIGNMENT),
-        (volatile enet_rx_bd_struct_t*)_s_rxBuffDescrip,
-        (volatile enet_tx_bd_struct_t*)_s_txBuffDescrip,
-        (uint8_t*)_s_rxDataBuff,
-        (uint8_t*)_s_txDataBuff,
+        SDK_SIZEALIGN(ENET_FRAME_MAX_FRAMELEN, MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE)),
+        SDK_SIZEALIGN(ENET_FRAME_MAX_FRAMELEN, MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE)),
+        &_s_rxBuffDescrip[0],
+        &_s_txBuffDescrip[0],
+        &_s_rxDataBuff[0][0],
+        &_s_txDataBuff[0][0],
     };
 
     RT_ASSERT(RT_NULL != netdev);
@@ -367,35 +341,13 @@ static rt_err_t _lan8720_ops_init( rt_device_t dev )
 static rt_err_t _lan8720_ops_open( rt_device_t dev,
                                    rt_uint16_t oflag )
 {
-    RT_ASSERT(RT_NULL != dev);
-
-    if (!(dev->flag & RT_DEVICE_FLAG_RDWR))
-    {
-        LOG_W("only support rd/wr option!");
-        return -RT_ERROR;
-    }
-
-    dev->ref_count++;
-
-    if (1 == dev->ref_count)
-    {
-        dev->user_data = RT_NULL;
-    }
-
+    LOG_D("emac open");
     return RT_EOK;
 }
 
 static rt_err_t _lan8720_ops_close( rt_device_t dev )
 {
-    RT_ASSERT(RT_NULL != dev);
-
-    if (1 == dev->ref_count)
-    {
-        rt_device_close(dev->user_data);
-        dev->user_data = RT_NULL;
-    }
-    dev->ref_count = (0 == dev->ref_count) ? 0 : (dev->ref_count - 1);
-
+    LOG_D("emac close");
     return RT_EOK;
 }
 
@@ -404,9 +356,9 @@ static rt_size_t _lan8720_ops_read( rt_device_t dev,
                                     void *buffer, 
                                     rt_size_t size )
 {
-    RT_ASSERT(RT_NULL != dev);
-
-    return RT_EOK;
+    LOG_D("emac read");
+    rt_set_errno(-RT_ENOSYS);
+    return 0;
 }
 
 static rt_size_t _lan8720_ops_write( rt_device_t dev, 
@@ -414,23 +366,9 @@ static rt_size_t _lan8720_ops_write( rt_device_t dev,
                                      const void *buffer, 
                                      rt_size_t size )
 {
-    struct skt_netdev *netdev = RT_NULL;
-    ENET_Type *enet = RT_NULL;
-    status_t result;
-
-    RT_ASSERT(RT_NULL != dev);
-
-    netdev = (struct skt_netdev*)(dev);
-    enet = (ENET_Type*)(netdev->periph.vaddr);
-
-    result = ENET_SendFrame(enet, &netdev->handle, buffer, size);
-    if (kStatus_Success == result) {
-        result = enet_check_send_flag(enet, 5000);
-    }
-
-    LOG_D("PHY send %s.", (result?"failed":"success"));
-
-    return (kStatus_Success == result) ? RT_EOK : -RT_ERROR;
+    LOG_D("emac write");
+    rt_set_errno(-RT_ENOSYS);
+    return 0;
 }
 
 static rt_err_t _lan8720_ops_control( rt_device_t dev, 
@@ -600,10 +538,36 @@ static void enet_build_broadcast_frame( struct skt_netdev *netdev, uint8_t *buf,
     }
 }
 
+static status_t enet_check_send_flag( ENET_Type *base, uint32_t timeout )
+{
+    status_t result;
+
+    if (0 == timeout) {
+        return kStatus_Success;
+    }
+
+    result = kStatus_Timeout;
+
+    while (timeout--)
+    {
+        if (! (base->TDAR & ENET_TDAR_TDAR_MASK))
+        {
+            result = kStatus_Success;
+            break;
+        }
+	}
+
+    return result;
+}
+
 int fec_send(int argc, char **argv)
 {
+    ENET_Type *enet = RT_NULL;
     uint8_t write_buf[128];
     uint16_t length = sizeof(write_buf);
+    status_t result;
+
+    enet = (ENET_Type*)(_s_lan8720_device.periph.vaddr);
 
     enet_build_broadcast_frame(&_s_lan8720_device, write_buf, length);
 
@@ -615,7 +579,10 @@ int fec_send(int argc, char **argv)
         }
     }
 
-    _lan8720_ops_write((rt_device_t)&_s_lan8720_device, 0, write_buf, length);
+    result = ENET_SendFrame(enet, &_s_lan8720_device.handle, write_buf, length);
+    if (kStatus_Success == result) {
+        result = enet_check_send_flag(enet, 5000);
+    }
 
     return 0;
 }

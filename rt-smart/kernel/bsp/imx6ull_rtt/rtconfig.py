@@ -21,7 +21,7 @@ end = '''
 #endif
 '''
 
-automac_h_fn = os.path.join(os.path.dirname(__file__), 'drivers', 'automac.h')
+automac_h_fn = os.path.join(os.path.dirname(__file__), '../imx6ull/drivers', 'automac.h')
 with open(automac_h_fn, 'w') as f:
     f.write(header + get_mac_address() + end)
 

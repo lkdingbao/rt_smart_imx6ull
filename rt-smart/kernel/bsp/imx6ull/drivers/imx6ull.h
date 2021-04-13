@@ -72,5 +72,13 @@ rt_inline uint32_t mem_map_p2v(uint32_t phys)
 
 #define GIC_ACK_INTID_MASK  0x000003ff
 
+#define readb(reg)		(*((volatile unsigned char *) (reg)))
+#define readw(reg)		(*((volatile unsigned short *) (reg)))
+#define readl(reg)		(*((volatile unsigned int *) (reg)))
+
+#define writeb(data, reg)	((*((volatile unsigned char *)(reg))) = (unsigned char)(data))
+#define writew(data, reg)	((*((volatile unsigned short *)(reg))) = (unsigned short)(data))
+#define writel(data, reg)	((*((volatile unsigned int *)(reg))) = (unsigned int)(data))
+
 #endif //#ifndef __IMX6ULL_BOARD_H__
 

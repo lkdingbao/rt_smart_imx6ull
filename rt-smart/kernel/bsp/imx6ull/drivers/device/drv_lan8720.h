@@ -17,12 +17,8 @@
 #include "fsl_enet.h"
 #include <netif/ethernetif.h>
 
-#define APP_ENET_BUFF_ALIGNMENT     MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE)
-
-#define ENET_RXBD_NUM               (4)
-#define ENET_TXBD_NUM               (4)
-#define ENET_RXBUFF_SIZE            (ENET_FRAME_MAX_FRAMELEN)
-#define ENET_TXBUFF_SIZE            (ENET_FRAME_MAX_FRAMELEN)
+#define ENET_RXBD_NUM               (2)
+#define ENET_TXBD_NUM               (2)
 
 /* Fixed value, not edit! */
 #define ENET_CONTROL_PIN_NUM        (11)

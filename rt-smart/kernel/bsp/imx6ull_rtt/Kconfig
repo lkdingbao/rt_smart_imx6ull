@@ -27,8 +27,10 @@ config RT_MAIN_THREAD_PRIORITY
     default 10
 
 menu "Platform Configuration"
-config SOC_CPU_MCIMX6Y2CVM05
-    bool "Sel NXP i.MX6ULL"
+config SOC_CPU_MX6
+    bool "Sel NXP i.MX6 series"
+    default y
+
     select ARCH_ARM
     select ARCH_ARM_MMU
     select ARCH_ARM_CORTEX_A
@@ -37,7 +39,19 @@ config SOC_CPU_MCIMX6Y2CVM05
     select RT_USING_COMPONENTS_INIT
     select RT_USING_USER_MAIN
     select RT_USING_CACHE
-    default y
+
+    if SOC_CPU_MX6
+        config CPU_MCIMX6Y2CVM05
+            bool "Select i.MX6ULL"
+            default y
+        config FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL
+            depends on RT_USING_CACHE
+            int "Enable DCache"
+            default 1
+        config FSL_SDK_DISABLE_DRIVER_CLOCK_CONTROL
+            int "Disable Clock control in fsl files"
+            default 1
+    endif
 endmenu
 
 source "$BSP_DIR/drivers/Kconfig"

@@ -12,13 +12,19 @@
 
 #### 2. 添加编译工具路径
 
-修改 `.\rt-smart\kernel\bsp\imx6ull\envconfig.bat` 文件中的 `RTT_EXEC_PATH`  
-值设置成编译工具所在的路径  
+**当前已经兼容 rt-thread 和 rt-smart**  
 
-同时设置 `RTT_PROJ` 的值为 `rt-smart`  
+1. 配置 rt-smart 环境  
+
+修改 `.\rt-smart\kernel\bsp\imx6ull-smart\envconfig.bat`  
+
+  - `RTT_EXEC_PATH`，设置成编译工具所在的路径  
+  - `RTT_PROJ`，设置为 `rt-smart`  
 
 ```
 @set RTT_ROOT=%cd%\..\..\..\.\kernel
+@set BSP_ROOT=%cd%\.\..\imx6ull
+
 @set RTT_TOOL_PATH=%cd%\..\..\..\.\tools\imx
 
 :: only support rt-smart and rt-thread
@@ -33,10 +39,38 @@
 @echo config finished.
 ```
 
+2. 配置rt-thread 环境  
+
+修改 `.\rt-smart\kernel\bsp\imx6ull-rtt\envconfig.bat`  
+
+  - `RTT_EXEC_PATH`，设置成编译工具所在的路径  
+  - `RTT_PROJ`，设置为 `rt-thread`  
+  - `RTT_ROOT`，设置为 rt-thread 内核路径（可直接使用 git 上的内核版本）  
+
+```
+@set RTT_ROOT=E:\0.SourceCode\rt-thread
+@set BSP_ROOT=%cd%\.\..\imx6ull
+
+@set RTT_TOOL_PATH=%cd%\..\..\..\.\tools\imx
+
+:: only support rt-smart and rt-thread
+@set RTT_PROJ=rt-thread
+
+@set RTT_CC=gcc
+@set RTT_CC_PREFIX=arm-none-eabi-
+
+@set RTT_EXEC_PATH=%ENV_ROOT%\tools\gnu_gcc\arm_gcc\mingw\bin
+@set PATH=%RTT_EXEC_PATH%;%RTT_TOOL_PATH%;%ENV_ROOT%\tools\gnu_gcc\arm_gcc\mingw\bin;%PATH%
+
+@echo config finished.
+```
+
 ### 二、源码修改
 
-源码基于官网上的 `rt-smart-20201125` 版本  
-对以下两处进行修改  
+rt-smart 源码基于官网上的 `rt-smart-20201125` 版本  
+rt-thread 源码基于官网上的 `2021/03/28` 版本  
+
+对以下几处进行修改  
 
 1. `.\rt-smart\kernel\libcpu\arm\cortex-a\mmu.h` 文件第 45 行添加  
 
@@ -88,7 +122,7 @@ device->bus->owner = device;
 
 ### 三、测试
 
-1. 在 `.\rt-smart\kernel\bsp\imx6ull\` 目录下打开 env 工具  
+1. 在 `.\rt-smart\kernel\bsp\imx6ull-smart\` 或者 `.\rt-smart\kernel\bsp\imx6ull-rtt\` 目录下打开 env 工具  
 
 2. 输入 `./envconfig.bat`，回车  
 
@@ -187,5 +221,4 @@ clear all processing files success.
 
 1. 链接地址为 0x80010000 ，如若需要修改，需要同时修改 imxdownload 工具  
 
-2. 程序可不经修改完全兼容 RT-Thread ，需要修改链接选项  
-**修改 `envconfig.bat 文件即可`**  
+2. 完全兼容 rt-smart 和 rt-thread  

@@ -1,0 +1,10 @@
+# for module compiling
+import os
+from building import *
+
+cwd = GetCurrentDir() + '\..\imx6ull'
+objs = []
+
+objs = objs + SConscript(os.path.join(cwd, 'SConscript'))
+
+Return('objs')

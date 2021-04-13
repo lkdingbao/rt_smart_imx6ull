@@ -31,12 +31,13 @@
 #ifndef __FSL_DEVICE_REGISTERS_H__
 #define __FSL_DEVICE_REGISTERS_H__
 
+#include <rtconfig.h>
+
 /*
  * Include the cpu specific register header files.
  *
  * The CPU macro should be declared in the project or makefile.
  */
-#define CPU_MCIMX6Y2CVM05
 #if (defined(CPU_MCIMX6Y2CVM05) || defined(CPU_MCIMX6Y2CVM08) || defined(CPU_MCIMX6Y2DVM05) || \
     defined(CPU_MCIMX6Y2DVM09))
 
