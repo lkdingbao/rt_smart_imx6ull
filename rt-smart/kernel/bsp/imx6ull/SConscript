@@ -10,7 +10,7 @@ group = DefineGroup('imx6ull', src, depend = [''], CPPPATH = CPPPATH)
 
 for d in list:
     path = os.path.join(cwd, d)
-    if os.path.isfile(os.path.join(path, 'SConscript')):
+    if os.path.isfile(os.path.join(path, 'SConscript')) and not os.path.isfile(os.path.join(path, '.config')):
         objs = objs + SConscript(os.path.join(d, 'SConscript'))
 objs = objs + group
 

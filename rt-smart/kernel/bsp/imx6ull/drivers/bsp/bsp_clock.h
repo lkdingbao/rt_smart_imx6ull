@@ -17,5 +17,7 @@ extern uint32_t *_g_pmu_vbase;
 
 void SystemClockInit(void);
 
+void rt_hw_ms_delay(uint32_t ms);
+
 #endif //#ifndef __BSP_CLOCK_H__
  

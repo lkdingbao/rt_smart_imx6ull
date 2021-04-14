@@ -150,7 +150,7 @@ static rt_size_t _i2c_bus_ops_master_xfer( struct rt_i2c_bus_device *device,
     {
         message_xfer.slaveAddress = device->addr;
         message_xfer.subaddress = msgs[idx].addr; //little-endian!
-        message_xfer.subaddressSize = (msgs[idx].flags & RT_I2C_REG_ADDR_16BIT) ? 2 : 1;
+        message_xfer.subaddressSize = (msgs[idx].flags & RT_I2C_ADDR_10BIT) ? 2 : 1;
         message_xfer.data = msgs[idx].buf;
         message_xfer.dataSize = msgs[idx].len;
         message_xfer.flags = kI2C_TransferDefaultFlag;

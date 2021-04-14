@@ -2,7 +2,7 @@
 import os
 from building import *
 
-cwd = GetCurrentDir() + '\..\imx6ull'
+cwd = GetCurrentDir() + '\..'
 objs = []
 
 objs = objs + SConscript(os.path.join(cwd, 'SConscript'))

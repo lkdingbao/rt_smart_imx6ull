@@ -21,7 +21,7 @@ end = '''
 #endif
 '''
 
-automac_h_fn = os.path.join(os.path.dirname(__file__), '../imx6ull/drivers', 'automac.h')
+automac_h_fn = os.path.join(os.path.dirname(__file__), '../drivers', 'automac.h')
 with open(automac_h_fn, 'w') as f:
     f.write(header + get_mac_address() + end)
 
@@ -31,6 +31,7 @@ CPU         = 'cortex-a'
 CROSS_TOOL  = 'gcc'
 PLATFORM    = 'gcc'
 EXEC_PATH   = os.getenv('RTT_EXEC_PATH') or '/usr/bin'
+TOOL_PATH   = os.getenv('RTT_TOOL_PATH') or '.'
 BUILD       = 'debug'
 
 PROJ_TYPE   = os.getenv('RTT_PROJ') or 'rt-thread'
@@ -88,8 +89,8 @@ if PLATFORM == 'gcc':
 
 DUMP_ACTION = OBJDUMP + ' -D -S $TARGET > output.DEBUG \n'
 
-MKIMAGE_PATH = '../../../tools/imx/'
-MKIMAGE_CFG_FILE = MKIMAGE_PATH + 'imximage.cfg.cfgtmp'
+MKIMAGE_PATH = TOOL_PATH
+MKIMAGE_CFG_FILE = MKIMAGE_PATH + '/imximage.cfg.cfgtmp'
 
 POST_ACTION = OBJCPY + ' -O binary $TARGET output.bin \n' + \
               SIZE + ' $TARGET \n' + \

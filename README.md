@@ -16,16 +16,16 @@
 
 1. 配置 rt-smart 环境  
 
-修改 `.\rt-smart\kernel\bsp\imx6ull-smart\envconfig.bat`  
+修改 `.\rt-smart\kernel\bsp\imx6ull\proj_smart\envconfig.bat`  
 
   - `RTT_EXEC_PATH`，设置成编译工具所在的路径  
   - `RTT_PROJ`，设置为 `rt-smart`  
 
 ```
-@set RTT_ROOT=%cd%\..\..\..\.\kernel
-@set BSP_ROOT=%cd%\.\..\imx6ull
+@set RTT_ROOT=%cd%\..\..\..\..\.\kernel
+@set BSP_ROOT=%cd%\..
 
-@set RTT_TOOL_PATH=%cd%\..\..\..\.\tools\imx
+@set RTT_TOOL_PATH=%cd%\..\..\..\..\.\tools\imx
 
 :: only support rt-smart and rt-thread
 @set RTT_PROJ=rt-smart
@@ -41,7 +41,7 @@
 
 2. 配置rt-thread 环境  
 
-修改 `.\rt-smart\kernel\bsp\imx6ull-rtt\envconfig.bat`  
+修改 `.\rt-smart\kernel\bsp\imx6ull\proj_rtt\envconfig.bat`  
 
   - `RTT_EXEC_PATH`，设置成编译工具所在的路径  
   - `RTT_PROJ`，设置为 `rt-thread`  
@@ -49,9 +49,9 @@
 
 ```
 @set RTT_ROOT=E:\0.SourceCode\rt-thread
-@set BSP_ROOT=%cd%\.\..\imx6ull
+@set BSP_ROOT=%cd%\..
 
-@set RTT_TOOL_PATH=%cd%\..\..\..\.\tools\imx
+@set RTT_TOOL_PATH=%cd%\..\..\..\..\.\tools\imx
 
 :: only support rt-smart and rt-thread
 @set RTT_PROJ=rt-thread
@@ -68,34 +68,7 @@
 ### 二、源码修改
 
 rt-smart 源码基于官网上的 `rt-smart-20201125` 版本  
-rt-thread 源码基于官网上的 `2021/03/28` 版本  
-
-对以下几处进行修改  
-
-1. `.\rt-smart\kernel\libcpu\arm\cortex-a\mmu.h` 文件第 45 行添加  
-
-```c
-#define NORMAL_WT_MEM  (SHARED|AP_RW|DOMAIN0|MEMWT|DESC_SEC)
-```
-
-2. `.\rt-smart\kernel\include\rthw.h` 文件第 152 行添加  
-
-```c
-void rt_hw_ms_delay(rt_uint32_t ms);
-```
-
-3. `.\rt-smart\kernel\components\drivers\spi\spi_core.c` 文件第 56 行添加  
-
-```c
-device->bus->owner = device;
-```
-
-4. `.\rt-smart\kernel\components\drivers\include\drivers\i2c.h`  文件第 26 行添加  
-
-```c
-#define RT_I2C_REG_ADDR_8BIT    (0u << 8)
-#define RT_I2C_REG_ADDR_16BIT   (1u << 8)
-```
+rt-thread 源码基于官网上的 *最新* 版本（需要单独 clone rt-thread）  
 
 ### 二、支持功能
 
@@ -122,7 +95,7 @@ device->bus->owner = device;
 
 ### 三、测试
 
-1. 在 `.\rt-smart\kernel\bsp\imx6ull-smart\` 或者 `.\rt-smart\kernel\bsp\imx6ull-rtt\` 目录下打开 env 工具  
+1. 在 `.\rt-smart\kernel\bsp\imx6ull\proj_smart\` 或者 `.\rt-smart\kernel\bsp\imx6ull\proj_rtt\` 目录下打开 env 工具  
 
 2. 输入 `./envconfig.bat`，回车  
 
@@ -172,7 +145,7 @@ arm-linux-musleabi-objcopy -O binary rtsmart.elf output.bin
 arm-linux-musleabi-size rtsmart.elf
    text    data     bss     dec     hex filename
  777848   40656  106564  925068   e1d8c rtsmart.elf
-mkimage.exe -n ../../../tools/imx/imximage.cfg.cfgtmp -T imximage -e 0x80010000 -d output.bin output.imx
+mkimage.exe -n ../../../../tools/imx/imximage.cfg.cfgtmp -T imximage -e 0x80010000 -d output.bin output.imx
 Image Type:   Freescale IMX Boot Image
 Image Ver:    2 (i.MX53/6/7 compatible)
 Mode:         DCD
@@ -220,5 +193,10 @@ clear all processing files success.
 ### 五、注意事项
 
 1. 链接地址为 0x80010000 ，如若需要修改，需要同时修改 imxdownload 工具  
+**当前 rt-smart 和 rt-thread 的启动地址均为 0x80010000**  
 
-2. 完全兼容 rt-smart 和 rt-thread  
+2. 平台程序可不经就该完全兼容 rt-smart 和 rt-thread  
+**可以使用 gitee 上最新的 rt-smart ，但需要对部分 Kconfig 选项进行配置，因此暂略**  
+
+3. 平台程序使用 fsl 的 sdk 进行开发，代码较为臃肿，但目前暂无整合计划  
+rt-thread 的 bsp 提供 imx6ull 的寄存器文件，如不习惯 sdk ，可简单根据 sdk 整合为寄存器操作  

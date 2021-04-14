@@ -23,8 +23,6 @@ extern "C" {
 #define RT_I2C_NO_START         (1u << 4)
 #define RT_I2C_IGNORE_NACK      (1u << 5)
 #define RT_I2C_NO_READ_ACK      (1u << 6)  /* when I2C reading, we do not ACK */
-#define RT_I2C_REG_ADDR_8BIT    (0u << 8)
-#define RT_I2C_REG_ADDR_16BIT   (1u << 8)
 
 struct rt_i2c_msg
 {

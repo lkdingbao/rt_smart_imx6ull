@@ -178,8 +178,8 @@ static struct pbuf* _imx_enet_rx( rt_device_t dev )
         ENET_GetRxErrBeforeReadFrame(&netdev->handle, &eErrStatic);
         ENET_ReadFrame(enet, &netdev->handle, RT_NULL, 0);
 
-        LOG_D("\nRxAlignErr %d", eErrStatic.statsRxAlignErr);
-        LOG_D(  "RxFcsErr   %d", eErrStatic.statsRxFcsErr);
+        LOG_D("RxAlignErr %d", eErrStatic.statsRxAlignErr);
+        LOG_D("RxFcsErr   %d", eErrStatic.statsRxFcsErr);
     }
 
     ENET_EnableInterrupts(enet, kENET_RxFrameInterrupt);

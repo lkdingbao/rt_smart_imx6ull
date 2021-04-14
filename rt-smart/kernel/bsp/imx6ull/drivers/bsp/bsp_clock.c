@@ -193,7 +193,7 @@ void rt_hw_us_delay(rt_uint32_t us)
     }
 }
 
-void rt_hw_ms_delay(rt_uint32_t ms)
+void rt_hw_ms_delay(uint32_t ms)
 {
     while (ms--)
     {
