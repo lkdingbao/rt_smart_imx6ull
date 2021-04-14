@@ -71,7 +71,7 @@
 
 ### 二、配置说明
 
-## 1. RT-Smart
+#### 1. RT-Smart
 
 可从以下方式加入 rt-smart 内核  
 
@@ -81,7 +81,7 @@
 2. 使用本仓库内的版本（内核版本为 `rt-smart-20201125`）  
 进入 `proj_smart` 工程下编译  
 
-## 2. RT-Thread
+#### 2. RT-Thread
 
 可从以下方式加入 rt-thread 内核  
 
