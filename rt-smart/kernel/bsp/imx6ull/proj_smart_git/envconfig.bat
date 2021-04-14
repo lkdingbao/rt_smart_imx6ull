@@ -1,4 +1,4 @@
-@set RTT_ROOT=%cd%\..\..\..\..\.\kernel
+@set RTT_ROOT=E:\0.SourceCode\rtthread\rt-smart\rt-thread
 @set BSP_ROOT=%cd%\..
 
 @set RTT_TOOL_PATH=%cd%\..\scripts

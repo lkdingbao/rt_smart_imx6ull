@@ -31,7 +31,6 @@ CPU         = 'cortex-a'
 CROSS_TOOL  = 'gcc'
 PLATFORM    = 'gcc'
 EXEC_PATH   = os.getenv('RTT_EXEC_PATH') or '/usr/bin'
-TOOL_PATH   = os.getenv('RTT_TOOL_PATH') or '.'
 BUILD       = 'debug'
 
 PROJ_TYPE   = os.getenv('RTT_PROJ') or 'rt-thread'
@@ -89,7 +88,7 @@ if PLATFORM == 'gcc':
 
 DUMP_ACTION = OBJDUMP + ' -D -S $TARGET > output.DEBUG \n'
 
-MKIMAGE_PATH = TOOL_PATH
+MKIMAGE_PATH = '../scripts'
 MKIMAGE_CFG_FILE = MKIMAGE_PATH + '/imximage.cfg.cfgtmp'
 
 POST_ACTION = OBJCPY + ' -O binary $TARGET output.bin \n' + \

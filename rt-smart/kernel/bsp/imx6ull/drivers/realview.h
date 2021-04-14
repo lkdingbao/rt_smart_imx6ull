@@ -85,7 +85,7 @@
 #define REALVIEW_SDMA_BASE          SDMAARM_BASE
 
 #include <rtdef.h>
-#include <armv7.h>
+//#include <armv7.h>
 
 /* number of interrupts on board */
 #define ARM_GIC_NR_IRQS             160

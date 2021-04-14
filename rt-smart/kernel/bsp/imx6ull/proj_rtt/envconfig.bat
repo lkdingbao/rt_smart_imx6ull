@@ -1,7 +1,7 @@
-@set RTT_ROOT=E:\0.SourceCode\rt-thread
+@set RTT_ROOT=E:\0.SourceCode\rtthread\rt-thread
 @set BSP_ROOT=%cd%\..
 
-@set RTT_TOOL_PATH=%cd%\..\..\..\..\.\tools\imx
+@set RTT_TOOL_PATH=%cd%\..\scripts
 
 :: only support rt-smart and rt-thread
 @set RTT_PROJ=rt-thread

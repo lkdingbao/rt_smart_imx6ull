@@ -6,15 +6,21 @@
 
 #### 1. 配置环境变量
 
+设置系统环境变量，此设置为永久有效  
+
 |变量名|变量值|
 |:-:|:-|
 |`BSP_ROOT`|`.`|
 
+每次打开 env 后还会设置临时的环境变量，只对当前的 env 内部使用  
+
 #### 2. 添加编译工具路径
 
-**当前已经兼容 rt-thread 和 rt-smart**  
+**目前已经兼容 rt-thread 和 rt-smart**  
 
 1. 配置 rt-smart 环境  
+
+*如果仓库自带的 rt-smart 内核代码，则无需修改*  
 
 修改 `.\rt-smart\kernel\bsp\imx6ull\proj_smart\envconfig.bat`  
 
@@ -22,10 +28,10 @@
   - `RTT_PROJ`，设置为 `rt-smart`  
 
 ```
-@set RTT_ROOT=%cd%\..\..\..\..\.\kernel
+@set RTT_ROOT=xxx\rt-thread :: xxx 为 rt-thread 内核代码的路径，同时需要切换到 rt-smart 分支
 @set BSP_ROOT=%cd%\..
 
-@set RTT_TOOL_PATH=%cd%\..\..\..\..\.\tools\imx
+@set RTT_TOOL_PATH=%cd%\..\scripts
 
 :: only support rt-smart and rt-thread
 @set RTT_PROJ=rt-smart
@@ -36,8 +42,7 @@
 @set RTT_EXEC_PATH=%ENV_ROOT%\tools\gnu_gcc\arm_gcc\musleabi\bin
 @set PATH=%RTT_EXEC_PATH%;%RTT_TOOL_PATH%;%ENV_ROOT%\tools\gnu_gcc\arm_gcc\mingw\bin;%PATH%
 
-@echo config finished.
-```
+@echo config finished.```
 
 2. 配置rt-thread 环境  
 
@@ -48,10 +53,10 @@
   - `RTT_ROOT`，设置为 rt-thread 内核路径（可直接使用 git 上的内核版本）  
 
 ```
-@set RTT_ROOT=E:\0.SourceCode\rt-thread
+@set RTT_ROOT=xxx\rt-thread :: xxx 为 rt-thread 内核代码的路径
 @set BSP_ROOT=%cd%\..
 
-@set RTT_TOOL_PATH=%cd%\..\..\..\..\.\tools\imx
+@set RTT_TOOL_PATH=%cd%\..\scripts
 
 :: only support rt-smart and rt-thread
 @set RTT_PROJ=rt-thread
@@ -62,13 +67,26 @@
 @set RTT_EXEC_PATH=%ENV_ROOT%\tools\gnu_gcc\arm_gcc\mingw\bin
 @set PATH=%RTT_EXEC_PATH%;%RTT_TOOL_PATH%;%ENV_ROOT%\tools\gnu_gcc\arm_gcc\mingw\bin;%PATH%
 
-@echo config finished.
-```
+@echo config finished.```
 
-### 二、源码修改
+### 二、配置说明
 
-rt-smart 源码基于官网上的 `rt-smart-20201125` 版本  
-rt-thread 源码基于官网上的 *最新* 版本（需要单独 clone rt-thread）  
+## 1. RT-Smart
+
+可从以下方式加入 rt-smart 内核  
+
+1. 使用 git 上的 *最新* 版本（单独 clone rt-thread 并切换分支到 `rt-smart`）  
+进入 `proj_smart_git` 工程下编译  
+
+2. 使用本仓库内的版本（内核版本为 `rt-smart-20201125`）  
+进入 `proj_smart` 工程下编译  
+
+## 2. RT-Thread
+
+可从以下方式加入 rt-thread 内核  
+
+1. 使用 git 上的 *最新* 版本（单独 clone rt-thread）  
+进入 `proj_rtt` 工程下编译  
 
 ### 二、支持功能
 
@@ -95,21 +113,22 @@ rt-thread 源码基于官网上的 *最新* 版本（需要单独 clone rt-threa
 
 ### 三、测试
 
-1. 在 `.\rt-smart\kernel\bsp\imx6ull\proj_smart\` 或者 `.\rt-smart\kernel\bsp\imx6ull\proj_rtt\` 目录下打开 env 工具  
+1. 在 `.\rt-smart\kernel\bsp\imx6ull\proj_xxx\` 目录下打开 env 工具  
 
 2. 输入 `./envconfig.bat`，回车  
 
 3. 输入 `scons` 进行编译，`scons -j8` 可以提高编译速度  
+*使用中发现，极少数情况下 `scons -j8` 会出现链接失败的情况，此时可先清除工程然后使用 `scons` 命令重试一次*  
 
 4. 如果使用 USB 方式下载，修改启动方式拨码开关到 USB 启动方式（根据板卡要求设置）  
 目前提供以下两种方式  
 
   - 打开 100ask.org 提供的下载软件，切换到专业版界面进行下载  
-  - 使用 uuu 工具下载（推荐）  
+  - 使用 uuu 工具下载（**推荐**）  
 
 5. 如果使用 SD 方式下载，需要修改正点原子的 imxdownload 工具  
 
-打开路径 `.\rt-smart\tools\imx\` 下 `imxdownload.c` 文件  
+打开路径 `.\rt-smart\kernel\bsp\imx6ull\scripts\` 下 `imxdownload.c` 文件  
 修改以下两个宏  
 
 ```
@@ -196,7 +215,8 @@ clear all processing files success.
 **当前 rt-smart 和 rt-thread 的启动地址均为 0x80010000**  
 
 2. 平台程序可不经就该完全兼容 rt-smart 和 rt-thread  
-**可以使用 gitee 上最新的 rt-smart ，但需要对部分 Kconfig 选项进行配置，因此暂略**  
 
 3. 平台程序使用 fsl 的 sdk 进行开发，代码较为臃肿，但目前暂无整合计划  
 rt-thread 的 bsp 提供 imx6ull 的寄存器文件，如不习惯 sdk ，可简单根据 sdk 整合为寄存器操作  
+
+4. **建议不要同时打开多个 env 软件**，保证同一时间只打开一个 env 软件，否则会产生意想不到的问题  
