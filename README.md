@@ -42,7 +42,8 @@
 @set RTT_EXEC_PATH=%ENV_ROOT%\tools\gnu_gcc\arm_gcc\musleabi\bin
 @set PATH=%RTT_EXEC_PATH%;%RTT_TOOL_PATH%;%ENV_ROOT%\tools\gnu_gcc\arm_gcc\mingw\bin;%PATH%
 
-@echo config finished.```
+@echo config finished.
+```
 
 2. 配置rt-thread 环境  
 
@@ -67,7 +68,8 @@
 @set RTT_EXEC_PATH=%ENV_ROOT%\tools\gnu_gcc\arm_gcc\mingw\bin
 @set PATH=%RTT_EXEC_PATH%;%RTT_TOOL_PATH%;%ENV_ROOT%\tools\gnu_gcc\arm_gcc\mingw\bin;%PATH%
 
-@echo config finished.```
+@echo config finished.
+```
 
 ### 二、配置说明
 
@@ -77,26 +79,6 @@
 
 1. 使用 git 上的 *最新* 版本（单独 clone rt-thread 并切换分支到 `rt-smart`）  
 进入 `proj_smart_git` 工程下编译  
-
-需要修改以下部分（*目前问题只存在与测试版 rt-smart 中，正式版会解决*）：  
-
-- `components/finsh/shell.c` 第 27 行添加  
-
-```c
-#undef RT_USING_POSIX
-```
-
-- `components/finsh/shell.c` 第 156 行修改为  
-
-```c
-rt_thread_mdelay(1); //rt_sem_take(&shell->rx_sem, RT_WAITING_FOREVER);
-```
-
-- `components/lwp/lwp_signal.c` 第 176 行修改为  
-
-```c
-if (!lwp || lwp->signal_in_process)
-```
 
 2. 使用本仓库内的版本（内核版本为 `rt-smart-20201125`）  
 进入 `proj_smart` 工程下编译  
