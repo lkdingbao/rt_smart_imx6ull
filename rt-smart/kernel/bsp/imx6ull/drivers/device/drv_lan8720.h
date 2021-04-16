@@ -17,8 +17,8 @@
 #include "fsl_enet.h"
 #include <netif/ethernetif.h>
 
-#define ENET_RXBD_NUM               (2)
-#define ENET_TXBD_NUM               (2)
+#define ENET_RXBD_NUM               (4)
+#define ENET_TXBD_NUM               (4)
 
 /* Fixed value, not edit! */
 #define ENET_CONTROL_PIN_NUM        (11)

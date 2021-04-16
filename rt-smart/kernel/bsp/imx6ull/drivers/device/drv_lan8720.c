@@ -39,12 +39,23 @@
 
 #define ENET_PHY_MONITOR_EN 1
 
+#define ENET_USE_MEM_BY_USER 1
+#define ENET_SHOW_ERROR_INFO 0
+
+#if defined(ENET_USE_MEM_BY_USER) && (ENET_USE_MEM_BY_USER)
+/* This is only a test method. not used in formal occasion. */
+_internal_rw enet_rx_bd_struct_t *_s_rxBuffDescrip;
+_internal_rw enet_tx_bd_struct_t *_s_txBuffDescrip;
+_internal_rw uint8_t *_s_rxDataBuff;
+_internal_rw uint8_t *_s_txDataBuff;
+#else
 _internal_rw AT_NONCACHEABLE_SECTION_ALIGN(enet_rx_bd_struct_t _s_rxBuffDescrip[ENET_RXBD_NUM], ENET_BUFF_ALIGNMENT);
 _internal_rw AT_NONCACHEABLE_SECTION_ALIGN(enet_tx_bd_struct_t _s_txBuffDescrip[ENET_TXBD_NUM], ENET_BUFF_ALIGNMENT);
-_internal_rw SDK_ALIGN(rt_uint8_t _s_rxDataBuff[ENET_RXBD_NUM][SDK_SIZEALIGN(ENET_FRAME_MAX_FRAMELEN, MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE))],
+_internal_rw AT_NONCACHEABLE_SECTION_ALIGN(rt_uint8_t _s_rxDataBuff[ENET_RXBD_NUM][SDK_SIZEALIGN(ENET_FRAME_MAX_FRAMELEN, MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE))],
           MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE));
-_internal_rw SDK_ALIGN(rt_uint8_t _s_txDataBuff[ENET_TXBD_NUM][SDK_SIZEALIGN(ENET_FRAME_MAX_FRAMELEN, MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE))],
+_internal_rw AT_NONCACHEABLE_SECTION_ALIGN(rt_uint8_t _s_txDataBuff[ENET_TXBD_NUM][SDK_SIZEALIGN(ENET_FRAME_MAX_FRAMELEN, MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE))],
           MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE));
+#endif
 
 _internal_rw struct skt_netdev _s_lan8720_device = {
     .name = "enet2",
@@ -69,7 +80,7 @@ _internal_rw struct skt_netdev _s_lan8720_device = {
     .rst_pin = GET_PIN(4,8),
     .phy_addr = 0x1,
     .mac_addr = {0xd4, 0xbe, 0xd9, 0x45, 0x22, 0x60},
-    .flag = 0, //no used!
+    .flag = 0,
 };
 
 static rt_err_t enet_init_clock( void )
@@ -91,14 +102,9 @@ static rt_err_t enet_init_clock( void )
 
 static void _enet_rx_callback( struct skt_netdev *netdev )
 {
-    ENET_Type *enet = RT_NULL;
     rt_err_t result;
 
     RT_ASSERT(RT_NULL != netdev);
-
-    enet = (ENET_Type*)(netdev->periph.vaddr);
-
-    ENET_DisableInterrupts(enet, kENET_RxFrameInterrupt);
 
     result = eth_device_ready(&(netdev->parent));
     if (RT_EOK != result)
@@ -178,11 +184,11 @@ static struct pbuf* _imx_enet_rx( rt_device_t dev )
         ENET_GetRxErrBeforeReadFrame(&netdev->handle, &eErrStatic);
         ENET_ReadFrame(enet, &netdev->handle, RT_NULL, 0);
 
-        LOG_D("RxAlignErr %d", eErrStatic.statsRxAlignErr);
-        LOG_D("RxFcsErr   %d", eErrStatic.statsRxFcsErr);
+#if defined(ENET_SHOW_ERROR_INFO) && (ENET_SHOW_ERROR_INFO)
+        LOG_RAW("\nRxAlignErr %d\n", eErrStatic.statsRxAlignErr);
+        LOG_RAW(  "RxFcsErr   %d\n", eErrStatic.statsRxFcsErr );
+#endif //#if defined(ENET_SHOW_ERROR_INFO) && (ENET_SHOW_ERROR_INFO)
     }
-
-    ENET_EnableInterrupts(enet, kENET_RxFrameInterrupt);
 
     UNUSED(eErrStatic);
     return RT_NULL;
@@ -192,7 +198,6 @@ static rt_err_t _imx_enet_tx( rt_device_t dev, struct pbuf* p )
 {
     struct skt_netdev *netdev = RT_NULL;
     ENET_Type *enet = RT_NULL;
-    status_t result;
 
     RT_ASSERT(RT_NULL != dev);
     RT_ASSERT(RT_NULL != p);
@@ -200,18 +205,14 @@ static rt_err_t _imx_enet_tx( rt_device_t dev, struct pbuf* p )
     netdev = (struct skt_netdev*)(dev);
     enet = (ENET_Type*)(netdev->periph.vaddr);
 
-    do
+    ENET_SendFrame(enet, &netdev->handle, (const uint8_t*)p, p->tot_len);
+
+    if (0 != netdev->flag)
     {
-        result = ENET_SendFrame(enet, &netdev->handle, (const uint8_t*)p, p->tot_len);
+        netdev->tx_wait_flag = RT_TRUE;
+        rt_sem_take(&netdev->tx_wait, RT_WAITING_FOREVER);
+    }
 
-        if (kStatus_ENET_TxFrameBusy == result)
-        {
-            netdev->tx_wait_flag = RT_FALSE;
-            rt_sem_take(&netdev->tx_wait, RT_WAITING_FOREVER);
-        }
-    } while (kStatus_ENET_TxFrameBusy == result);
-
-    UNUSED(result);
     return RT_EOK;
 }
 
@@ -232,14 +233,14 @@ static void _lan8720_gpio_init( struct skt_netdev *netdev )
     reg_value = _IOMUXC_GPR->GPR1;
     if      (REALVIEW_ENET1_BASE == netdev->periph.paddr)
     {
-        reg_value &= ~(IOMUXC_GPR_GPR1_ENET1_CLK_SEL_MASK 
+        reg_value &= ~(IOMUXC_GPR_GPR1_ENET1_TX_CLK_DIR_MASK 
                      | IOMUXC_GPR_GPR1_ENET1_CLK_SEL_MASK);
         reg_value |=  IOMUXC_GPR_GPR1_ENET1_TX_CLK_DIR(1);
         reg_value |=  IOMUXC_GPR_GPR1_ENET1_CLK_SEL(0);
     }
     else if (REALVIEW_ENET2_BASE == netdev->periph.paddr)
     {
-        reg_value &= ~(IOMUXC_GPR_GPR1_ENET2_CLK_SEL_MASK 
+        reg_value &= ~(IOMUXC_GPR_GPR1_ENET2_TX_CLK_DIR_MASK 
                      | IOMUXC_GPR_GPR1_ENET2_CLK_SEL_MASK);
         reg_value |=  IOMUXC_GPR_GPR1_ENET2_TX_CLK_DIR(1);
         reg_value |=  IOMUXC_GPR_GPR1_ENET2_CLK_SEL(0);
@@ -250,10 +251,6 @@ static void _lan8720_gpio_init( struct skt_netdev *netdev )
     config.interruptMode = kGPIO_NoIntmode;
     config.outputLogic = PIN_LOW;
     gpio_config(netdev->rst_pin, &config);
-
-    gpio_output(netdev->rst_pin, 0);
-    rt_hw_ms_delay(20);
-    gpio_output(netdev->rst_pin, 1);
 }
 
 static rt_err_t _lan8720_device_init( struct skt_netdev *netdev )
@@ -266,15 +263,23 @@ static rt_err_t _lan8720_device_init( struct skt_netdev *netdev )
     ENET_Type *enet = RT_NULL;
     bool link;
 
+#if defined(ENET_USE_MEM_BY_USER) && (ENET_USE_MEM_BY_USER)
+    /* This is only a test method. not used in formal occasion. */
+    _s_rxBuffDescrip = (enet_rx_bd_struct_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x0); //2K Byte, offset 0x0
+    _s_txBuffDescrip = (enet_tx_bd_struct_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x800); //2K Byte, offset 0x800
+    _s_rxDataBuff = (uint8_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x100000); //1M Byte, offset 0x100000
+    _s_txDataBuff = (uint8_t*)(KERNEL_VADDR_START + 0x0fc00000 + 0x200000); //1M Byte, offset 0x200000
+#endif
+
     enet_buffer_config_t buffConfig = {
         ENET_RXBD_NUM,
         ENET_TXBD_NUM,
         SDK_SIZEALIGN(ENET_FRAME_MAX_FRAMELEN, MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE)),
         SDK_SIZEALIGN(ENET_FRAME_MAX_FRAMELEN, MAX(ENET_BUFF_ALIGNMENT, FSL_FEATURE_L1DCACHE_LINESIZE_BYTE)),
-        &_s_rxBuffDescrip[0],
-        &_s_txBuffDescrip[0],
-        &_s_rxDataBuff[0][0],
-        &_s_txDataBuff[0][0],
+        (volatile enet_rx_bd_struct_t*)_s_rxBuffDescrip,
+        (volatile enet_tx_bd_struct_t*)_s_txBuffDescrip,
+        (uint8_t*)_s_rxDataBuff,
+        (uint8_t*)_s_txDataBuff,
     };
 
     RT_ASSERT(RT_NULL != netdev);
@@ -288,6 +293,11 @@ static rt_err_t _lan8720_device_init( struct skt_netdev *netdev )
 
     sysClock = CLOCK_GetFreq(kCLOCK_AhbClk);
 //    LOG_D("sysclk is %d.", sysClock);
+
+    gpio_output(netdev->rst_pin, 0);
+    rt_hw_ms_delay(50);
+    gpio_output(netdev->rst_pin, 1);
+    rt_hw_ms_delay(50);
 
     result = PHY_Init(enet, netdev->phy_addr, sysClock);
     LOG_D("PHY init %s.", (result?"failed":"success"));
@@ -317,6 +327,8 @@ static rt_err_t _lan8720_device_init( struct skt_netdev *netdev )
 
     ENET_Init(enet, &netdev->handle, &config, &buffConfig, netdev->mac_addr, sysClock);
     ENET_ActiveRead(enet);
+
+    netdev->flag = 1;
 
     LOG_D("lan8720 init finished.");
 
@@ -492,6 +504,7 @@ int rt_hw_lan8720_init(void)
 
     _s_lan8720_device.periph.vaddr = platform_get_periph_vaddr(_s_lan8720_device.periph.paddr);
 
+    _s_lan8720_device.flag = 0; //wait for enet init!
     eth_device_init(ethdev, "e0");
 
 #if defined(ENET_PHY_MONITOR_EN) && (ENET_PHY_MONITOR_EN)
@@ -604,7 +617,7 @@ int phy(int argc, char **argv)
 
     return 0;
 }
-//MSH_CMD_EXPORT_ALIAS(phy, phy, <usr> enet phy test);
+MSH_CMD_EXPORT_ALIAS(phy, phy, <usr> enet phy test);
 
 #endif //#ifdef RT_USING_LAN8720
 

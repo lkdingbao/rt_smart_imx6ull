@@ -240,6 +240,9 @@
 
 /* Wiced WiFi */
 
+#define PKG_USING_NETUTILS
+#define PKG_NETUTILS_IPERF
+#define PKG_USING_NETUTILS_LATEST_VERSION
 
 /* IoT Cloud */
 

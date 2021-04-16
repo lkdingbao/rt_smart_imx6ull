@@ -128,15 +128,9 @@ _internal_ro rt_uint32_t _k_console_color_tbl[] =
 };
 #endif
 
-static rt_uint32_t _lcd_read_point( rt_uint16_t x, rt_uint16_t y )
-{
-    rt_uint32_t *fbpoint = (rt_uint32_t*)_s_lcd.info.fb_virt;
-    return fbpoint[y*_s_lcd.info.width + x];
-}
-
 static void _lcd_clear( register rt_uint32_t color )
 {
-    rt_uint32_t *fbpoint = (rt_uint32_t*)_s_lcd.info.fb_virt;
+    rt_uint32_t *fbpoint = (rt_uint32_t*)_s_lcd.info.fb;
     rt_uint32_t num = _s_lcd.info.width * _s_lcd.info.height;
 
     while (num--)
@@ -479,6 +473,8 @@ static int _lcd_console_ops_putc( struct rt_serial_device *dev,
             lcd_disp->next = lcd_disp->next->next;
             lcd_console->xn = 0;
         }
+
+        lcd_info->flush_flag = RT_TRUE;
     }
 
     return 1;
@@ -508,7 +504,7 @@ _internal_ro struct rt_device_ops _k_lcd_ops =
 
 void lcd_fill(uint32_t *src, uint32_t *dest, uint32_t num)
 {
-    rt_memcpy(dest, src, num); //fill 800¡Á480 need 250ms!
+    rt_memcpy(dest, src, num);
 }
 
 int rt_hw_lcd_init(void)
@@ -538,6 +534,7 @@ int rt_hw_lcd_init(void)
     }
 
     fb_size = _s_lcd.info.width * _s_lcd.info.height * _s_lcd.info.pxsz;
+    _s_lcd.info.fb = (rt_uint32_t)rt_malloc(fb_size);
 #ifdef RT_USING_USERSPACE
     _s_lcd.info.fb_phys = PV_OFFSET + _s_lcd.info.fb_virt;
 #else
@@ -550,7 +547,10 @@ int rt_hw_lcd_init(void)
         return -RT_ERROR;
     }
 
+    rt_memset((rt_uint8_t*)_s_lcd.info.fb, 0xFF, fb_size);
     rt_memset((rt_uint8_t*)_s_lcd.info.fb_virt, 0xFF, fb_size);
+
+    _s_lcd.info.flush_flag = RT_FALSE;
 
     _lcd_gpio_init();
     _lcd_clock_init(42, 1, 4, 8);
@@ -585,95 +585,44 @@ int rt_hw_lcd_init(void)
 }
 INIT_BOARD_EXPORT(rt_hw_lcd_init);
 
-int lcdc(int argc, char **argv)
+static void lcd_flush_thread_entry( void *param )
 {
-    if (2 != argc)
+    uint32_t fb_size = _s_lcd.info.width * _s_lcd.info.height
+                     * _s_lcd.info.pxsz;
+
+    while (1)
     {
-        LOG_D("error param num!");
-        return -RT_ERROR;
-    }
-
-    switch (argv[1][0])
-    {
-        case 'r':
-            LOG_D("red...");
-            _lcd_clear(RGB_COLOR_RED);
-            break;
-        case 'g':
-            LOG_D("green...");
-            _lcd_clear(RGB_COLOR_GREEN);
-            break;
-        case 'b':
-            LOG_D("blue...");
-            _lcd_clear(RGB_COLOR_BLUE);
-            break;
-        case 'w':
-            LOG_D("white...");
-            _lcd_clear(RGB_COLOR_WHITE);
-            break;
-
-        default:
-            LOG_D("error param!");
-            _lcd_clear(RGB_COLOR_BLACK);
-            break;
-    }
-
-    return 0;
-}
-MSH_CMD_EXPORT_ALIAS(lcdc, lcdc, <usr> rgb lcd color fill test);
-
-int lcds(int argc, char **argv)
-{
-    if (2 != argc)
-    {
-        LOG_D("error param num!");
-        return -RT_ERROR;
-    }
-
-    for (int i=0; i<strlen(argv[1]); i++)
-    {
-#ifdef RT_LCD_CONSOLE_DEBUG
-        _lcd_console_ops_putc(&_s_lcd_console.parent, argv[1][i]);
-#else
-        rt_kprintf("%c", argv[1][i]);
-#endif
-    }
-
-#ifdef RT_LCD_CONSOLE_DEBUG
-    _lcd_console_ops_putc(&_s_lcd_console.parent, '\n');
-#else
-    rt_kprintf("\n");
-#endif
-
-    return 0;
-}
-MSH_CMD_EXPORT_ALIAS(lcds, lcds, <usr> rgb lcd string test);
-
-int lcdn(int argc, char **argv)
-{
-    int xs, ys;
-
-    if (3 != argc)
-    {
-        LOG_D("error param num!");
-        return -RT_ERROR;
-    }
-
-    xs = atoi(argv[1]);
-    ys = atoi(argv[2]);
-
-    for (int i=0; i<16; i++)
-    {
-        for (int j=0; j<8; j++)
+        if (RT_TRUE == _g_lcd_info.flush_flag)
         {
-            LOG_RAW("%06x ", _lcd_read_point(xs+j, ys+i));
+            _g_lcd_info.flush_flag = RT_FALSE;
+            lcd_fill((uint32_t*)_s_lcd.info.fb, (uint32_t*)_s_lcd.info.fb_virt, fb_size);
         }
-        LOG_RAW("\n");
+        rt_thread_mdelay(10);
+    }
+}
+
+int rt_hw_lcd_disp_init(void)
+{
+    rt_thread_t tid;
+
+    /* start lcd display flush thread in the end. */
+    tid = rt_thread_create( "lcd_disp",
+                            lcd_flush_thread_entry,
+                            RT_NULL,
+                            512,
+                            RT_THREAD_PRIORITY_MAX - 2,
+                            2 );
+
+    if (RT_NULL != tid)
+    {
+        rt_thread_startup(tid);
+    } else {
+        LOG_E("phy monitor start failed!");
     }
 
-    return 0;
+    return RT_EOK;
 }
-MSH_CMD_EXPORT_ALIAS(lcdn, lcdn, <usr> rgb lcd probe data);
+INIT_DEVICE_EXPORT(rt_hw_lcd_disp_init);
 
 #endif //#ifdef RT_USING_RGBLCD
 

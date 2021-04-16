@@ -13,3 +13,16 @@
 @set PATH=%RTT_EXEC_PATH%;%RTT_TOOL_PATH%;%ENV_ROOT%\tools\gnu_gcc\arm_gcc\mingw\bin;%PATH%
 
 @echo config finished.
+
+@echo off
+
+if "%1"=="clean" (
+    :: clear scons scripts
+    rm -rf .sconsign.dblite .config.old *.pyc *.elf output.*
+    rm -rf cconfig.h
+    :: clear building outputs
+    make clean
+) else (
+    :: clear last building objects
+    scons --clean
+)

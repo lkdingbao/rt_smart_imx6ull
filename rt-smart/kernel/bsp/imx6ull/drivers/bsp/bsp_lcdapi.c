@@ -19,7 +19,7 @@ struct skt_lcd_info _g_lcd_info =
 
 rt_inline void _lcd_draw_point( rt_uint16_t x, rt_uint16_t y, rt_uint32_t c )
 {
-    rt_uint32_t *framebuffer = (rt_uint32_t*)_g_lcd_info.fb_virt;
+    rt_uint32_t *framebuffer = (rt_uint32_t*)_g_lcd_info.fb;
     framebuffer[y*_g_lcd_info.width + x] = c;
 }
 

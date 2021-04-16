@@ -92,6 +92,7 @@ struct skt_lcd_info
     rt_uint8_t                  pxsz;
     rt_uint8_t                  reserved[3];
 
+    rt_uint32_t                 fb;
     rt_uint32_t                 fb_phys;
     rt_uint32_t                 fb_virt;
 
@@ -104,6 +105,8 @@ struct skt_lcd_info
 
     rt_uint32_t                 pen_color;
     rt_uint32_t                 panel_color;
+
+    rt_bool_t                   flush_flag;
 };
 
 struct skt_lcd
