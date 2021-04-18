@@ -211,6 +211,14 @@ clear ...
 clear all processing files success.
 ```
 
+特别的，可以使用 `.\envconfig.bat clean` 来直接删除 `build` 文件夹实现清除工程的作用  
+
+### 5. 生成反汇编文件
+
+```
+.\envconfig.bat debug
+```
+
 ### 五、注意事项
 
 1. 链接地址为 0x80010000 ，如若需要修改，需要同时修改 imxdownload 工具  

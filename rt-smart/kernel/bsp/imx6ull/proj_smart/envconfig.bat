@@ -22,6 +22,10 @@ if "%1"=="clean" (
     rm -rf cconfig.h
     :: clear building outputs
     make clean
+) else if "%1"=="debug" (
+    @echo create disassembly file ...
+    %RTT_CC_PREFIX%objdump -D -S %RTT_PROJ:-=%.elf > output.DEBUG
+    @echo create disassembly file success.
 ) else (
     :: clear last building objects
     scons --clean

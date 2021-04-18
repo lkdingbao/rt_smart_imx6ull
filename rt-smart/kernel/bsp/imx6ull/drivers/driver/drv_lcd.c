@@ -22,9 +22,7 @@
 #include "__def.h"
 #include "realview.h"
 #include "bsp_gpio.h"
-#ifdef RT_LCD_CONSOLE_DEBUG
 #include "bsp_lcdapi.h"
-#endif
 #include "drv_lcd.h"
 #include "skt.h"
 
