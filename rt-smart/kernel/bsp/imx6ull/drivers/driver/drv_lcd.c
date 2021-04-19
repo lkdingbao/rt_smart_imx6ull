@@ -444,7 +444,7 @@ static int _lcd_console_ops_putc( struct rt_serial_device *dev,
 
         if (flush_flag)
         {
-            struct skt_lcd_disp *plist = plist = lcd_console->disp_list.next;
+            struct skt_lcd_disp *plist = lcd_console->disp_list.next;
 
             if ((lcd_console->yn + 1) > lcd_console->disp_list.deep)
             {
