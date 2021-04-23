@@ -67,6 +67,8 @@ _internal_rw struct skt_lcd _s_lcd =
     .flag = 0,
 };
 
+_internal_rw rt_thread_t _s_lcd_disp_tid = RT_NULL;
+
 _internal_rw struct skt_gpio _s_gpio_info[] = 
 {
     {IOMUXC_LCD_DATA00_LCDIF_DATA00, 0, 0x79},
@@ -601,19 +603,17 @@ static void lcd_flush_thread_entry( void *param )
 
 int rt_hw_lcd_disp_init(void)
 {
-    rt_thread_t tid;
-
     /* start lcd display flush thread in the end. */
-    tid = rt_thread_create( "lcd_disp",
-                            lcd_flush_thread_entry,
-                            RT_NULL,
-                            512,
-                            RT_THREAD_PRIORITY_MAX - 2,
-                            2 );
+    _s_lcd_disp_tid = rt_thread_create( "lcd_disp",
+                                        lcd_flush_thread_entry,
+                                        RT_NULL,
+                                        512,
+                                        RT_THREAD_PRIORITY_MAX - 2,
+                                        2 );
 
-    if (RT_NULL != tid)
+    if (RT_NULL != _s_lcd_disp_tid)
     {
-        rt_thread_startup(tid);
+        rt_thread_startup(_s_lcd_disp_tid);
     } else {
         LOG_E("phy monitor start failed!");
     }

@@ -53,10 +53,6 @@ _internal_rw struct skt_i2c _s_i2c_bus[eDevI2c_Max] = {
     .gpio = {
         {IOMUXC_GPIO1_IO02_I2C1_SCL,      1, 0X70B0},
         {IOMUXC_GPIO1_IO03_I2C1_SDA,      1, 0X70B0},
-//        {IOMUXC_UART4_TX_DATA_I2C1_SCL,   1, 0X70B0},
-//        {IOMUXC_UART4_RX_DATA_I2C1_SDA,   1, 0X70B0},
-//        {IOMUXC_CSI_PIXCLK_I2C1_SCL,      1, 0X70B0},
-//        {IOMUXC_CSI_MCLK_I2C1_SDA,        1, 0X70B0},
     },
     .flag = 0,
 },
@@ -67,12 +63,8 @@ _internal_rw struct skt_i2c _s_i2c_bus[eDevI2c_Max] = {
     .name = "i2c2",
     .periph.paddr = REALVIEW_I2C2_BASE,
     .gpio = {
-//        {IOMUXC_GPIO1_IO00_I2C2_SCL,      1, 0X70B0},
-//        {IOMUXC_GPIO1_IO01_I2C2_SDA,      1, 0X70B0},
         {IOMUXC_UART5_TX_DATA_I2C2_SCL,   1, 0X70B0},
         {IOMUXC_UART5_RX_DATA_I2C2_SDA,   1, 0X70B0},
-//        {IOMUXC_CSI_HSYNC_I2C2_SCL,       1, 0X70B0},
-//        {IOMUXC_CSI_VSYNC_I2C2_SDA,       1, 0X70B0},
     },
     .flag = 0,
 },
@@ -84,10 +76,7 @@ _internal_rw struct skt_i2c _s_i2c_bus[eDevI2c_Max] = {
     .gpio = {
         {IOMUXC_UART1_TX_DATA_I2C3_SCL,   1, 0X70B0},
         {IOMUXC_UART1_RX_DATA_I2C3_SDA,   1, 0X70B0},
-//        {IOMUXC_ENET2_RX_DATA0_I2C3_SCL,  1, 0X70B0},
-//        {IOMUXC_ENET2_RX_DATA1_I2C3_SDA,  1, 0X70B0},
-//        {IOMUXC_LCD_DATA01_I2C3_SCL,      1, 0X70B0},
-//        {IOMUXC_LCD_DATA00_I2C3_SDA,      1, 0X70B0},
+
     },
     .flag = 0,
 },
@@ -99,10 +88,6 @@ _internal_rw struct skt_i2c _s_i2c_bus[eDevI2c_Max] = {
     .gpio = {
         {IOMUXC_UART2_TX_DATA_I2C4_SCL,   1, 0X70B0},
         {IOMUXC_UART2_RX_DATA_I2C4_SDA,   1, 0X70B0},
-//        {IOMUXC_ENET2_RX_EN_I2C4_SCL,     1, 0X70B0},
-//        {IOMUXC_ENET2_TX_DATA0_I2C4_SDA,  1, 0X70B0},
-//        {IOMUXC_LCD_DATA02_I2C4_SDA,      1, 0X70B0},
-//        {IOMUXC_LCD_DATA00_I2C3_SDA,      1, 0X70B0},
     },
     .flag = 0,
 },
@@ -222,10 +207,10 @@ int rt_hw_i2c_init(void)
     {
         _s_i2c_bus[i].periph.vaddr = platform_get_periph_vaddr(_s_i2c_bus[i].periph.paddr);
         LOG_D("pddr %08x vaddr %08x", _s_i2c_bus[i].periph.paddr, _s_i2c_bus[i].periph.vaddr);
-    }
 
-    drv_i2c_bus_register( _s_i2c_bus[eDevI2c_I2C2].periph.paddr,
-                          _s_i2c_bus[eDevI2c_I2C2].name );
+        drv_i2c_bus_register( _s_i2c_bus[i].periph.paddr,
+                              _s_i2c_bus[i].name );
+    }
 
     return RT_EOK;
 }

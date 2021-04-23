@@ -25,10 +25,6 @@
 #include "drv_lan8720.h"
 #include "skt.h"
 
-#if defined(FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL) && FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL    
-#include "fsl_cache.h"
-#endif /* FSL_SDK_ENABLE_DRIVER_CACHE_CONTROL */
-
 #ifdef RT_USING_LWIP
 #include "lwipopts.h"
 #endif
@@ -39,7 +35,7 @@
 
 #define ENET_PHY_MONITOR_EN 1
 
-#define ENET_USE_MEM_BY_USER 1
+#define ENET_USE_MEM_BY_USER 0
 #define ENET_SHOW_ERROR_INFO 0
 
 #if defined(ENET_USE_MEM_BY_USER) && (ENET_USE_MEM_BY_USER)
@@ -62,12 +58,12 @@ _internal_rw struct skt_netdev _s_lan8720_device = {
     .periph.paddr = REALVIEW_ENET2_BASE,
     .irqno = ENET2_IRQn,
     .gpio = {
-        {IOMUXC_GPIO1_IO06_ENET2_MDIO,              0U, 0xB829},
+        {IOMUXC_GPIO1_IO06_ENET2_MDIO,              0U, 0xB029},
         {IOMUXC_GPIO1_IO07_ENET2_MDC,               0U, 0xB0E9},
         
         {IOMUXC_ENET2_TX_DATA0_ENET2_TDATA00,       0U, 0xB0E9},
         {IOMUXC_ENET2_TX_DATA1_ENET2_TDATA01,       0U, 0xB0E9},
-        {IOMUXC_ENET2_TX_CLK_ENET2_REF_CLK2,        1U, 0x0031}, //to ENET2_TX_CLK(CLKIN)
+        {IOMUXC_ENET2_TX_CLK_ENET2_REF_CLK2,        1U, 0x00F0}, //to ENET2_TX_CLK(CLKIN)
         {IOMUXC_ENET2_TX_EN_ENET2_TX_EN,            0U, 0xB0E9},
         
         {IOMUXC_ENET2_RX_DATA0_ENET2_RDATA00,       0U, 0xB0E9},
@@ -82,6 +78,10 @@ _internal_rw struct skt_netdev _s_lan8720_device = {
     .mac_addr = {0xd4, 0xbe, 0xd9, 0x45, 0x22, 0x60},
     .flag = 0,
 };
+
+#if defined(ENET_PHY_MONITOR_EN) && (ENET_PHY_MONITOR_EN)
+_internal_rw rt_thread_t _s_phy_monitor_tid = RT_NULL;
+#endif
 
 static rt_err_t enet_init_clock( void )
 {
@@ -261,7 +261,6 @@ static rt_err_t _lan8720_device_init( struct skt_netdev *netdev )
     uint32_t sysClock;
     status_t result;
     ENET_Type *enet = RT_NULL;
-    bool link;
 
 #if defined(ENET_USE_MEM_BY_USER) && (ENET_USE_MEM_BY_USER)
     /* This is only a test method. not used in formal occasion. */
@@ -292,7 +291,6 @@ static rt_err_t _lan8720_device_init( struct skt_netdev *netdev )
     config.macSpecialConfig = kENET_ControlMacAddrInsert;
 
     sysClock = CLOCK_GetFreq(kCLOCK_AhbClk);
-//    LOG_D("sysclk is %d.", sysClock);
 
     gpio_output(netdev->rst_pin, 0);
     rt_hw_ms_delay(50);
@@ -302,22 +300,11 @@ static rt_err_t _lan8720_device_init( struct skt_netdev *netdev )
     result = PHY_Init(enet, netdev->phy_addr, sysClock);
     LOG_D("PHY init %s.", (result?"failed":"success"));
 
-    result = PHY_GetLinkStatus(enet, netdev->phy_addr, &link);
-    if (kStatus_Success == result)
-    {
-        PHY_GetLinkSpeedDuplex(enet, netdev->phy_addr, &speed, &duplex);
-        config.miiSpeed = (enet_mii_speed_t)speed;
-        config.miiDuplex = (enet_mii_duplex_t)duplex;
+    speed = (_s_lan8720_device.link_up_status & 0xF0) >> 4;
+    duplex = (_s_lan8720_device.link_up_status & 0x0F);
 
-        LOG_D("PHY speed %dM, duplex %s.", (config.miiSpeed?100:10), (config.miiDuplex?"full":"half"));
-
-        netdev->link_up_flag = true;
-        netdev->link_up_status = ((uint8_t)config.miiSpeed << 4) | ((uint8_t)config.miiDuplex);;
-
-        eth_device_linkchange(&_s_lan8720_device.parent, link);
-    } else {
-        LOG_W("PHY commuicate failed!");
-    }
+    config.miiSpeed = (enet_mii_speed_t)(speed);
+    config.miiDuplex = (enet_mii_duplex_t)(duplex);
 
     config.interrupt = ENET_TX_INTERRUPT
                      | ENET_RX_INTERRUPT;
@@ -338,28 +325,17 @@ static rt_err_t _lan8720_device_init( struct skt_netdev *netdev )
 
 static rt_err_t _lan8720_ops_init( rt_device_t dev )
 {
-    struct skt_netdev *netdev = RT_NULL;
-
-    RT_ASSERT(RT_NULL != dev);
-
-    netdev = (struct skt_netdev*)(dev);
-
-    _lan8720_gpio_init(netdev);
-    _lan8720_device_init(netdev);
-
     return RT_EOK;
 }
 
 static rt_err_t _lan8720_ops_open( rt_device_t dev,
                                    rt_uint16_t oflag )
 {
-    LOG_D("emac open");
     return RT_EOK;
 }
 
 static rt_err_t _lan8720_ops_close( rt_device_t dev )
 {
-    LOG_D("emac close");
     return RT_EOK;
 }
 
@@ -368,7 +344,6 @@ static rt_size_t _lan8720_ops_read( rt_device_t dev,
                                     void *buffer, 
                                     rt_size_t size )
 {
-    LOG_D("emac read");
     rt_set_errno(-RT_ENOSYS);
     return 0;
 }
@@ -378,7 +353,6 @@ static rt_size_t _lan8720_ops_write( rt_device_t dev,
                                      const void *buffer, 
                                      rt_size_t size )
 {
-    LOG_D("emac write");
     rt_set_errno(-RT_ENOSYS);
     return 0;
 }
@@ -397,7 +371,7 @@ static rt_err_t _lan8720_ops_control( rt_device_t dev,
     {
         case NIOCTL_GADDR:
             if (args) {
-                rt_memcpy(args, netdev->mac_addr, 6);
+                rt_memcpy(args, netdev->mac_addr, ENET_MAC_ADDR_LENGTH);
             } else {
                 return -RT_ERROR;
             }
@@ -442,22 +416,26 @@ static void enet_get_phy_link_state( void )
         _s_lan8720_device.link_up_flag = linkUpFlag;
 
         PHY_GetLinkSpeedDuplex(enet, phyAddr, &speed, &duplex);
-        linkUpStatus = ((uint8_t)speed << 4) | ((uint8_t)duplex);
+        linkUpStatus = ((uint8_t)speed << 4) 
+                     | ((uint8_t)duplex);
 
         if (linkUpStatus != _s_lan8720_device.link_up_status)
         {
+            _s_lan8720_device.link_up_status = linkUpStatus;
+
             if (true == _s_lan8720_device.link_up_flag)
             {
-                LOG_D("link on.");
+                _lan8720_gpio_init(&_s_lan8720_device);
                 _lan8720_device_init(&_s_lan8720_device);
-                eth_device_linkchange(&_s_lan8720_device.parent, RT_TRUE);
+
+                LOG_D("link on.");
+                LOG_D("PHY speed %dM, duplex %s.", (speed?100:10), (duplex?"full":"half"));
             } else {
                 LOG_D("link down.");
-                eth_device_linkchange(&_s_lan8720_device.parent, RT_FALSE);
             }
-        }
 
-        _s_lan8720_device.link_up_status = linkUpStatus;
+            eth_device_linkchange(&_s_lan8720_device.parent, _s_lan8720_device.link_up_flag);
+        }
     }
 }
 
@@ -466,7 +444,7 @@ static void phy_monitor_thread_entry( void *param )
     while (1)
     {
         enet_get_phy_link_state();
-        rt_thread_mdelay(5000);
+        rt_thread_mdelay(1000);
     }
 }
 #endif //#if defined(ENET_PHY_MONITOR_EN) && (ENET_PHY_MONITOR_EN)
@@ -474,9 +452,6 @@ static void phy_monitor_thread_entry( void *param )
 int rt_hw_lan8720_init(void)
 {   
     struct eth_device *ethdev = RT_NULL;
-#if defined(ENET_PHY_MONITOR_EN) && (ENET_PHY_MONITOR_EN)
-    rt_thread_t tid;
-#endif
 
     ethdev = &(_s_lan8720_device.parent);
 
@@ -495,9 +470,6 @@ int rt_hw_lan8720_init(void)
     ethdev->eth_tx = _imx_enet_tx;
     ethdev->eth_rx = _imx_enet_rx;
 
-    _s_lan8720_device.link_up_flag = false;
-    _s_lan8720_device.link_up_status = ~0;
-
     /* semaphore must be init before enet. */
     rt_sem_init(&_s_lan8720_device.tx_wait, "tx_wait", 0, RT_IPC_FLAG_FIFO);
     _s_lan8720_device.tx_wait_flag = RT_FALSE;
@@ -505,20 +477,30 @@ int rt_hw_lan8720_init(void)
     _s_lan8720_device.periph.vaddr = platform_get_periph_vaddr(_s_lan8720_device.periph.paddr);
 
     _s_lan8720_device.flag = 0; //wait for enet init!
+
+    _s_lan8720_device.link_up_status = ((uint8_t)kPHY_Speed10M << 4) 
+                                     | ((uint8_t)kPHY_FullDuplex);
+
+    _lan8720_gpio_init(&_s_lan8720_device);
+    _lan8720_device_init(&_s_lan8720_device);
+
+    _s_lan8720_device.link_up_flag = false;
+    _s_lan8720_device.link_up_status = ~0;
+
     eth_device_init(ethdev, "e0");
 
 #if defined(ENET_PHY_MONITOR_EN) && (ENET_PHY_MONITOR_EN)
     /* start phy monitor thread in the end. */
-    tid = rt_thread_create( "phy_mntr",
-                            phy_monitor_thread_entry,
-                            RT_NULL,
-                            512,
-                            RT_THREAD_PRIORITY_MAX - 2,
-                            2 );
+    _s_phy_monitor_tid = rt_thread_create( "phy_mntr",
+                                           phy_monitor_thread_entry,
+                                           RT_NULL,
+                                           1024,
+                                           RT_THREAD_PRIORITY_MAX - 2,
+                                           2 );
 
-    if (RT_NULL != tid)
+    if (RT_NULL != _s_phy_monitor_tid)
     {
-        rt_thread_startup(tid);
+        rt_thread_startup(_s_phy_monitor_tid);
     } else {
         LOG_E("phy monitor start failed!");
     }

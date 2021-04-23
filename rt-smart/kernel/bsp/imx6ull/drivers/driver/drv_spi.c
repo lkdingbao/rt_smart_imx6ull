@@ -54,9 +54,6 @@ _internal_rw struct skt_spi _s_spi_bus[eDevSpi_Max] = {
         {IOMUXC_LCD_DATA20_ECSPI1_SCLK,     0, 0x10B1},
         {IOMUXC_LCD_DATA23_ECSPI1_MISO,     0, 0x10B1},
         {IOMUXC_LCD_DATA22_ECSPI1_MOSI,     0, 0x10B1},
-//        {IOMUXC_CSI_DATA04_ECSPI1_SCLK,     0, 0x10B1},
-//        {IOMUXC_CSI_DATA07_ECSPI1_MISO,     0, 0x10B1},
-//        {IOMUXC_CSI_DATA06_ECSPI1_MOSI,     0, 0x10B1},
     },
     .flag = 0,
 },
@@ -70,9 +67,6 @@ _internal_rw struct skt_spi _s_spi_bus[eDevSpi_Max] = {
         {IOMUXC_UART4_TX_DATA_ECSPI2_SCLK,  0, 0x10B1},
         {IOMUXC_UART5_RX_DATA_ECSPI2_MISO,  0, 0x10B1},
         {IOMUXC_UART5_TX_DATA_ECSPI2_MOSI,  0, 0x10B1},
-//        {IOMUXC_CSI_DATA00_ECSPI2_SCLK,     0, 0x10B1},
-//        {IOMUXC_CSI_DATA03_ECSPI2_MISO,     0, 0x10B1},
-//        {IOMUXC_CSI_DATA02_ECSPI2_MOSI,     0, 0x10B1},
     },
     .flag = 0,
 },
@@ -86,9 +80,6 @@ _internal_rw struct skt_spi _s_spi_bus[eDevSpi_Max] = {
         {IOMUXC_UART2_RX_DATA_ECSPI3_SCLK,  0, 0x10B1},
         {IOMUXC_UART2_RTS_B_ECSPI3_MISO,    0, 0x10B1},
         {IOMUXC_UART2_CTS_B_ECSPI3_MOSI,    0, 0x10B1},
-//        {IOMUXC_NAND_CE0_B_ECSPI3_SCLK,     0, 0x10B1},
-//        {IOMUXC_NAND_CLE_ECSPI3_MISO,       0, 0x10B1},
-//        {IOMUXC_NAND_CE1_B_ECSPI3_MOSI,     0, 0x10B1},
     },
     .flag = 0,
 },
@@ -102,9 +93,6 @@ _internal_rw struct skt_spi _s_spi_bus[eDevSpi_Max] = {
         {IOMUXC_ENET2_TX_DATA1_ECSPI4_SCLK, 0, 0x10B1},
         {IOMUXC_ENET2_TX_CLK_ECSPI4_MISO,   0, 0x10B1},
         {IOMUXC_ENET2_TX_EN_ECSPI4_MOSI,    0, 0x10B1},
-//        {IOMUXC_NAND_DATA04_ECSPI4_SCLK,    0, 0x10B1},
-//        {IOMUXC_NAND_DATA06_ECSPI4_MISO,    0, 0x10B1},
-//        {IOMUXC_NAND_DATA05_ECSPI4_MOSI,    0, 0x10B1},
     },
     .flag = 0,
 },
@@ -314,10 +302,10 @@ int rt_hw_spi_init(void)
     {
         _s_spi_bus[i].periph.vaddr = platform_get_periph_vaddr(_s_spi_bus[i].periph.paddr);
         LOG_D("pddr %08x vaddr %08x", _s_spi_bus[i].periph.paddr, _s_spi_bus[i].periph.vaddr);
-    }
 
-    drv_spi_bus_register( _s_spi_bus[eDevSpi_SPI3].periph.paddr,
-                          _s_spi_bus[eDevSpi_SPI3].name );
+        drv_spi_bus_register( _s_spi_bus[i].periph.paddr,
+                              _s_spi_bus[i].name );
+    }
 
     return RT_EOK;
 }

@@ -25,4 +25,8 @@ config RT_USING_LAN8720
     bool "Enable LAN8720"
     default y
 
+config RT_USING_SDCARD
+    bool "Enable SD Card"
+    default y
+
 endmenu

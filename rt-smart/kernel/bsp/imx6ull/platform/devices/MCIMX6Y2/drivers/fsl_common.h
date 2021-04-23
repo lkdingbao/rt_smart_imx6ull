@@ -357,7 +357,8 @@ void SDK_Free(void *ptr);
 #endif
 
 #if defined(__GIC_PRIO_BITS)
-        GIC_EnableIRQ(interrupt);
+        extern void rt_hw_interrupt_umask(int vector);
+        rt_hw_interrupt_umask(interrupt);
 #else
     NVIC_EnableIRQ(interrupt);
 #endif
@@ -395,7 +396,8 @@ void SDK_Free(void *ptr);
 #endif
 
 #if defined(__GIC_PRIO_BITS)
-        GIC_DisableIRQ(interrupt);
+        extern void rt_hw_interrupt_mask(int vector);
+        rt_hw_interrupt_mask(interrupt);
 #else
     NVIC_DisableIRQ(interrupt);
 #endif

@@ -267,6 +267,7 @@
 /* Platform Device Configuration */
 
 #define RT_USING_LAN8720
+#define RT_USING_SDCARD
 
 /* Third-party Libraries Configuration */
 

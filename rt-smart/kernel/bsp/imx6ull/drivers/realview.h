@@ -84,6 +84,9 @@
 
 #define REALVIEW_SDMA_BASE          SDMAARM_BASE
 
+#define REALVIEW_USDHC1_BASE        USDHC1_BASE
+#define REALVIEW_USDHC2_BASE        USDHC2_BASE
+
 #include <rtdef.h>
 //#include <armv7.h>
 

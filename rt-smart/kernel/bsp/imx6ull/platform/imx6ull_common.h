@@ -22,6 +22,8 @@
 #include "fsl_cache.h"
 #include "fsl_enet.h"
 #include "fsl_phy.h"
+#include "fsl_usdhc.h"
+#include "fsl_card.h"
 
 #endif //#ifndef __IMX6ULL_COMMON_H__
 
