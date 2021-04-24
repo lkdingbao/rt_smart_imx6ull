@@ -23,7 +23,7 @@
 #include "drv_i2c.h"
 #include "skt.h"
     
-#define DBG_TAG "i2c"
+#define DBG_TAG "drv.i2c"
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 

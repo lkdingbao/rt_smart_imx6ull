@@ -23,7 +23,7 @@
 #include "drv_spi.h"
 #include "skt.h"
 
-#define DBG_TAG "spi"
+#define DBG_TAG "drv.spi"
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 

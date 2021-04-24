@@ -26,7 +26,7 @@
 #include "drv_lcd.h"
 #include "skt.h"
 
-#define DBG_TAG "LCD"
+#define DBG_TAG "drv.lcd"
 #define DBG_LVL DBG_LOG
 #include <rtdbg.h>
 

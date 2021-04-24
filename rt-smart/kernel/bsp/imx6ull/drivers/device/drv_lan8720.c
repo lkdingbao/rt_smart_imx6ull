@@ -29,7 +29,7 @@
 #include "lwipopts.h"
 #endif
 
-#define DBG_TAG "LAN8720"
+#define DBG_TAG "drv.lan8720"
 #define DBG_LVL DBG_LOG
 #include <rtdbg.h>
 

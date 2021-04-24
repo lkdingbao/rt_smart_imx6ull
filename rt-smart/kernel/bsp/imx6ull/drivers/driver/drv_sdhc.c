@@ -25,7 +25,7 @@
 #include "drv_sdhc.h"
 #include "skt.h"
 
-#define DBG_TAG "SDCARD"
+#define DBG_TAG "drv.sdhc"
 #define DBG_LVL DBG_LOG
 #include <rtdbg.h>
 

@@ -23,7 +23,7 @@
 #include "drv_pcf8574x.h"
 #include "skt.h"
 
-#define DBG_TAG "PCF8574x"
+#define DBG_TAG "drv.pcf8574"
 #define DBG_LVL DBG_LOG
 #include <rtdbg.h>
 

@@ -28,7 +28,7 @@
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 
-#define _DEVICE_NAME        "gt9147"
+#define _DEVICE_NAME        "drv.gt9147"
 #define _BUS_NAME           "i2c2"
 
 /* i2c addr can sel 0x14 or 0x5D with setting INT_PIN timing */
