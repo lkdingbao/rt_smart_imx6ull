@@ -94,4 +94,11 @@ config RT_USING_RGBLCD
     endif
 endmenu
 
+menu "Select SD Card Driver"
+config RT_USING_SDHC
+    bool "Enable SDHC"
+    default y
+
+endmenu
+
 endmenu

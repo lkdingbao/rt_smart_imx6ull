@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2006-2018, RT-Thread Development Team
- *
- * SPDX-License-Identifier: Apache-2.0
+ * Main
+ *   main file
  *
  * Change Logs:
  * Date           Author       Notes
- * 2020/10/7      bernard      the first version
+ * 2021-04-24     Lyons        first version
  */
 
 #include <rtthread.h>
@@ -21,7 +20,7 @@
 #define DBG_LVL DBG_LOG
 #include <rtdbg.h>
 
-#define LED_PIN GET_PIN(0,3)
+#define LED_PIN GET_PIN(1,3)
 
 static void main_loop(void);
 

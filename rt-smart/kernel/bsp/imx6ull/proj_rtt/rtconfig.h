@@ -264,10 +264,13 @@
 #define BSP_LCD_WIDTH 800
 #define BSP_LCD_HEIGHT 480
 
+/* Select SD Card Driver */
+
+#define RT_USING_SDHC
+
 /* Platform Device Configuration */
 
 #define RT_USING_LAN8720
-#define RT_USING_SDCARD
 
 /* Third-party Libraries Configuration */
 

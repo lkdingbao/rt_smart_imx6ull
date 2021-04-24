@@ -18,6 +18,9 @@ if not GetDepend('RT_USING_I2C'):
 if not GetDepend('RT_USING_RGBLCD'):
     SrcRemove(src, ['drv_lcd.c'])
 
+if not GetDepend('RT_USING_SDHC'):
+    SrcRemove(src, ['drv_sdhc.c'])
+
 group = DefineGroup('Driver', src, depend = [''], CPPPATH = CPPPATH)
 
 for d in list:

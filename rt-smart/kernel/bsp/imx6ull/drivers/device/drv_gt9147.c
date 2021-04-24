@@ -40,8 +40,8 @@
 #define _TOUCH_WIDTH        BSP_LCD_WIDTH
 #define _TOUCH_HEIGHT       BSP_LCD_HEIGHT
 
-#define INT_PIN         GET_PIN(0,9)
-#define RST_PIN         GET_PIN(4,9)
+#define INT_PIN             GET_PIN(1,9)
+#define RST_PIN             GET_PIN(5,9)
 _internal_ro struct skt_gpio _k_gpio_info[] = 
 {
     {IOMUXC_GPIO1_IO09_GPIO1_IO09,        0, 0x0080}, //int pin(int mode), must at the first!
@@ -99,7 +99,7 @@ static void _write_data( rt_device_t dev, rt_uint16_t reg, rt_uint8_t *data, rt_
     rt_uint8_t  bus_addr = _BUS_I2C_ADDR;
 
     rt_device_control(dev, RT_I2C_DEV_CTRL_ADDR, &bus_addr);
-    rt_device_write(dev, (RT_I2C_REG_ADDR_16BIT<<16) | reg, data, len);
+    rt_device_write(dev, (RT_I2C_ADDR_10BIT<<16) | reg, data, len);
 }
 
 static void _read_data( rt_device_t dev, rt_uint16_t reg, rt_uint8_t *data, rt_uint16_t len )
@@ -107,7 +107,7 @@ static void _read_data( rt_device_t dev, rt_uint16_t reg, rt_uint8_t *data, rt_u
     rt_uint8_t bus_addr = _BUS_I2C_ADDR;
 
     rt_device_control(dev, RT_I2C_DEV_CTRL_ADDR, &bus_addr);
-    rt_device_read(dev, (RT_I2C_REG_ADDR_16BIT<<16) | reg, data, len);
+    rt_device_read(dev, (RT_I2C_ADDR_10BIT<<16) | reg, data, len);
 }
 
 void _write_one_data( rt_device_t dev, rt_uint16_t reg, rt_uint8_t data )
@@ -233,10 +233,6 @@ static void _gt9147_gpio_init( rt_uint8_t mode )
         port_num = GET_PORT_FIELD(INT_PIN);
         pin_num = GET_PIN_FIELD(INT_PIN);
 
-        config.direction = kGPIO_DigitalInput;
-        config.interruptMode = kGPIO_IntRisingEdge;
-        config.outputLogic = PIN_LOW;
-
         paddr = GET_GPIO_BASE_ADDR(port_num);
         vaddr = platform_get_periph_vaddr((rt_uint32_t)paddr);
 
@@ -244,8 +240,12 @@ static void _gt9147_gpio_init( rt_uint8_t mode )
         _s_gpio_irq_info.periph.vaddr = vaddr;
         _s_gpio_irq_info.pin = pin_num;
 
-        GPIO_PinInit((GPIO_Type*)vaddr, pin_num, &config);
-        GPIO_EnableInterrupts((GPIO_Type*)vaddr, (1 << pin_num));
+        config.direction = kGPIO_DigitalInput;
+        config.interruptMode = kGPIO_IntRisingEdge;
+        config.outputLogic = PIN_LOW;
+        gpio_config(INT_PIN, &config);
+
+        GPIO_EnableInterrupts((GPIO_Type*)vaddr, (1<<pin_num));
     }
     else
     {
@@ -258,21 +258,8 @@ static void _gt9147_gpio_init( rt_uint8_t mode )
         config.interruptMode = kGPIO_NoIntmode;
         config.outputLogic = PIN_LOW;
 
-        port_num = GET_PORT_FIELD(INT_PIN);
-        pin_num = GET_PIN_FIELD(INT_PIN);
-
-        paddr = GET_GPIO_BASE_ADDR(port_num);
-        vaddr = platform_get_periph_vaddr((rt_uint32_t)paddr);
-
-        GPIO_PinInit((GPIO_Type*)vaddr, pin_num, &config);
-
-        port_num = GET_PORT_FIELD(RST_PIN);
-        pin_num = GET_PIN_FIELD(RST_PIN);
-
-        paddr = GET_GPIO_BASE_ADDR(port_num);
-        vaddr = platform_get_periph_vaddr((rt_uint32_t)paddr);
-
-        GPIO_PinInit((GPIO_Type*)vaddr, pin_num, &config);
+        gpio_config(INT_PIN, &config);
+        gpio_config(RST_PIN, &config);
     }
 }
 

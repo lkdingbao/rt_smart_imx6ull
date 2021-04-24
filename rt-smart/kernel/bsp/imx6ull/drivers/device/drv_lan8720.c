@@ -73,7 +73,7 @@ _internal_rw struct skt_netdev _s_lan8720_device = {
         
         {IOMUXC_SNVS_SNVS_TAMPER8_GPIO5_IO08,       0U, 0x70A1}, //to ENET2_RST
     },
-    .rst_pin = GET_PIN(4,8),
+    .rst_pin = GET_PIN(5,8),
     .phy_addr = 0x1,
     .mac_addr = {0xd4, 0xbe, 0xd9, 0x45, 0x22, 0x60},
     .flag = 0,

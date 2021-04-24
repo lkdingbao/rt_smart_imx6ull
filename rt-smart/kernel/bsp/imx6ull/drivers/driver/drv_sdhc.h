@@ -12,10 +12,10 @@
 
 #include "skt.h"
 
-#ifdef RT_USING_SDCARD
+#ifdef RT_USING_SDHC
 
 /* Fixed value, not edit! */
-#define SDCARD_CONTROL_PIN_NUM      (7)
+#define SDCARD_CONTROL_PIN_NUM      (6)
 
 struct skt_sddev
 {
@@ -26,11 +26,10 @@ struct skt_sddev
     rt_uint32_t                     irqno;
 
     struct skt_gpio                 gpio[SDCARD_CONTROL_PIN_NUM];
-    uint32_t                        cd_pin;
 
     rt_uint32_t                     flag;
 };
 
-#endif //#ifdef RT_USING_SDCARD
+#endif //#ifdef RT_USING_SDHC
 #endif //#ifndef __DRV_SDCARD_H__
 

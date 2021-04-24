@@ -104,8 +104,6 @@
 #define RT_DFS_ELM_MAX_SECTOR_SIZE 4096
 #define RT_DFS_ELM_REENTRANT
 #define RT_USING_DFS_DEVFS
-#define RT_USING_DFS_ROMFS
-#define RT_USING_DFS_RAMFS
 
 /* Device Drivers */
 
@@ -299,10 +297,13 @@
 #define RT_LCD_CONSOLE_DEBUG
 #define RT_LCD_CONSOLE_PARSER
 
+/* Select SD Card Driver */
+
+#define RT_USING_SDHC
+
 /* Platform Device Configuration */
 
 #define RT_USING_LAN8720
-#define RT_USING_SDCARD
 
 /* Third-party Libraries Configuration */
 

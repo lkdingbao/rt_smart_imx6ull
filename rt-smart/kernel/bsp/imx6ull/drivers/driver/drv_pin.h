@@ -13,10 +13,12 @@
 #include "skt.h"
 
 /* 
- * p, GPIOx, count fron 0, 0~4 is valid
+ * p, GPIOx, count fron 1, 1~5 is valid
  * n, PINx, count fron 0, depend on the pin mask table, max 31
  */
-#define GET_PIN(p, n)       (rt_uint8_t)((((p)&0x7)<<5) | ((n) & 0x1F))
+#define _PORT_MASK(p)       ( (p-1) & 0x07 )
+#define _PIN_MASK(n)        ( (n) & 0x1F )
+#define GET_PIN(p, n)       (rt_uint8_t)( (_PORT_MASK(p)<<5) | _PIN_MASK(n) )
 
 #endif //#ifndef __DRV_PIN_H__
 

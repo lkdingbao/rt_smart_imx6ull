@@ -18,9 +18,6 @@ if not GetDepend('RT_USING_PCF8574'):
 if not GetDepend('RT_USING_LAN8720'):
     SrcRemove(src, ['drv_lan8720.c'])
 
-if not GetDepend('RT_USING_SDCARD'):
-    SrcRemove(src, ['drv_sd.c'])
-
 group = DefineGroup('Device', src, depend = [''], CPPPATH = CPPPATH)
 
 for d in list:
