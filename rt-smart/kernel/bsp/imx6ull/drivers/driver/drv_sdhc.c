@@ -31,6 +31,13 @@
 
 #define SDCARD_SHOW_CARD_INFO 0
 
+/*
+ * There are 512M Bytes reserved for boot image.
+ * Modify these parameter manually.
+ */
+#define SDCARD_PART1_START_SECTOR 8192 //no fs!
+#define SDCARD_PART2_START_SECTOR 1056768 //use fs.
+
 _internal_rw struct skt_sddev _s_sdcard_device = {
     .name = "sd0",
     .periph.paddr = BOARD_SD_HOST_BASEADDR,
@@ -66,7 +73,7 @@ static void _sdcard_show_info( sd_card_t *card )
 
     LOG_RAW("  sector size:  %d Bytes\n", card->blockSize);
     LOG_RAW("  sector count: %d\n", card->blockCount);
-    LOG_RAW("  block size:   %d Bytes\n", card->csd.eraseSectorSize);
+    LOG_RAW("  block size:   %d\n", card->csd.eraseSectorSize);
 
     LOG_RAW("Working condition:\n");
 
@@ -148,8 +155,11 @@ static rt_err_t _sdcard_device_init( struct skt_sddev *sddev )
         card->host.sourceClock_Hz = BOARD_USDHC2_CLK_FREQ;
     }
 
-    if (SD_Init(card))
+    if (kStatus_Success != SD_Init(card))
     {
+        SD_Deinit(card);
+        rt_memset(card, 0U, sizeof(_s_sd));
+
         LOG_W("sd card init failed.");
         return -RT_ERROR;
     }
@@ -208,7 +218,7 @@ static rt_size_t _sdcard_ops_read( rt_device_t dev,
         return 0;
     }
 
-    if (kStatus_Success != SD_ReadBlocks(&_s_sd, buffer, pos, size))
+    if (kStatus_Success != SD_ReadBlocks(&_s_sd, buffer, SDCARD_PART2_START_SECTOR+pos, size))
     {
         return 0;
     }
@@ -228,7 +238,7 @@ static rt_size_t _sdcard_ops_write( rt_device_t dev,
         return 0;
     }
 
-    if (kStatus_Success != SD_WriteBlocks(&_s_sd, buffer, pos, size))
+    if (kStatus_Success != SD_WriteBlocks(&_s_sd, buffer, SDCARD_PART2_START_SECTOR+pos, size))
     {
         return 0;
     }
