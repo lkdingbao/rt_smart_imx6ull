@@ -419,6 +419,8 @@ static int _lcd_console_ops_putc( struct rt_serial_device *dev,
 
             lcd_console->parser.flag &= ~_PARSER_FLAG_ANALYSE;
             lcd_console->parser.flag ^=  _PARSER_FLAG_FINISH;
+
+            rt_memset(&lcd_console->parser.buf, 0, 8);
         } 
         else if (lcd_console->parser.deep == lcd_console->parser.cnt)
         {
@@ -478,6 +480,11 @@ static int _lcd_console_ops_putc( struct rt_serial_device *dev,
     }
 
     return 1;
+}
+
+int lcd_console_putc(char ch)
+{
+    return _lcd_console_ops_putc((struct rt_serial_device*)&_s_lcd_console, ch);
 }
 
 _internal_ro struct rt_uart_ops _k_lcd_console_ops =

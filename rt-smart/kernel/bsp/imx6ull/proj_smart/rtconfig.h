@@ -217,9 +217,6 @@
 
 /* Utilities */
 
-#define RT_USING_RYM
-#define YMODEM_USING_CRC_TABLE
-#define YMODEM_USING_FILE_TRANSFER
 #define RT_USING_LWP
 #define RT_LWP_MAX_NR 30
 #define RT_CH_MSG_MAX_NR 1024
@@ -294,6 +291,8 @@
 #define RT_USING_RGBLCD
 #define BSP_LCD_WIDTH 800
 #define BSP_LCD_HEIGHT 480
+#define RT_LCD_CONSOLE_DEBUG
+#define RT_LCD_CONSOLE_PARSER
 
 /* Select SD Card Driver */
 

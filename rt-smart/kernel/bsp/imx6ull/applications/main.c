@@ -26,23 +26,6 @@ static void main_loop(void);
 
 int main(void)
 {
-#ifdef RT_LCD_CONSOLE_DEBUG
-    rt_console_set_device("clcd");
-    rt_show_version();
-
-    LOG_D("board: i.mx 6ull");
-    LOG_D("build: %s %s", __DATE__, __TIME__);
-
-    /*
-     * redirect the console will cause a error.
-     * e.g. redirect from uart to clcd, and final to uart.
-     *      the second uart will not recv any input.
-     *      but this is only occured under rt-thread,
-     *      while rt-smart is no-error.
-     */
-    rt_console_set_device(RT_CONSOLE_DEVICE_NAME);
-#endif
-
     LOG_D("board: i.mx 6ull");
     LOG_D("build: %s %s", __DATE__, __TIME__);
 

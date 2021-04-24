@@ -280,6 +280,8 @@
 #define RT_USING_RGBLCD
 #define BSP_LCD_WIDTH 800
 #define BSP_LCD_HEIGHT 480
+#define RT_LCD_CONSOLE_DEBUG
+#define RT_LCD_CONSOLE_PARSER
 
 /* Select SD Card Driver */
 
