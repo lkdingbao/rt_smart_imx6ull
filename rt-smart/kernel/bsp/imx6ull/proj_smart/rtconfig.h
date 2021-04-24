@@ -220,6 +220,9 @@
 
 /* Utilities */
 
+#define RT_USING_RYM
+#define YMODEM_USING_CRC_TABLE
+#define YMODEM_USING_FILE_TRANSFER
 #define RT_USING_LWP
 #define RT_LWP_MAX_NR 30
 #define RT_CH_MSG_MAX_NR 1024
@@ -303,7 +306,6 @@
 
 /* Platform Device Configuration */
 
-#define RT_USING_LAN8720
 
 /* Third-party Libraries Configuration */
 
