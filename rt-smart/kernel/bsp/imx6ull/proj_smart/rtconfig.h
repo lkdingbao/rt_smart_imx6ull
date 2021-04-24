@@ -101,7 +101,7 @@
 #define RT_DFS_ELM_USE_LFN 3
 #define RT_DFS_ELM_MAX_LFN 255
 #define RT_DFS_ELM_DRIVES 2
-#define RT_DFS_ELM_MAX_SECTOR_SIZE 4096
+#define RT_DFS_ELM_MAX_SECTOR_SIZE 512
 #define RT_DFS_ELM_REENTRANT
 #define RT_USING_DFS_DEVFS
 
@@ -145,9 +145,6 @@
 #define RT_USING_LIBC
 #define RT_USING_MUSL
 #define RT_USING_POSIX
-#define RT_USING_POSIX_MMAP
-#define RT_USING_POSIX_TERMIOS
-#define RT_USING_POSIX_AIO
 
 /* Network */
 
@@ -297,8 +294,6 @@
 #define RT_USING_RGBLCD
 #define BSP_LCD_WIDTH 800
 #define BSP_LCD_HEIGHT 480
-#define RT_LCD_CONSOLE_DEBUG
-#define RT_LCD_CONSOLE_PARSER
 
 /* Select SD Card Driver */
 
