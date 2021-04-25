@@ -106,8 +106,6 @@ _internal_rw struct skt_gpio _s_gpio_info[] =
 _internal_rw struct skt_lcd_console _s_lcd_console = 
 {
     .name = "clcd",
-    .pen_color = RGB_COLOR_BLACK,
-    .panel_color = RGB_COLOR_WHITE,
     .font_size = 16, //only support 1608!
     .flag = (RT_DEVICE_FLAG_RDWR | RT_DEVICE_FLAG_INT_RX),
 };
@@ -319,37 +317,6 @@ static void _lcd_console_parser_get_color( const struct skt_parser *parser, rt_u
 #endif //#ifdef RT_LCD_CONSOLE_PARSER
 
 #ifdef RT_LCD_CONSOLE_DEBUG
-static struct skt_lcd_disp* _lcd_console_init_disp_list( rt_uint16_t num,
-                                                         rt_uint16_t size )
-{
-    struct skt_lcd_disp *h, *p;
-    rt_uint16_t idx;
-
-    RT_ASSERT(num >= 1);
-
-    for (idx=0; idx<num; idx++)
-    {
-        if (0 == idx)
-        {
-            h = (struct skt_lcd_disp*)rt_calloc(1, sizeof(struct skt_lcd_disp));
-            p = h;
-        } else {
-            p->next = (struct skt_lcd_disp*)rt_calloc(1, sizeof(struct skt_lcd_disp));
-            p = p->next;
-        }
-
-        p->deep = size;
-        p->buf = (rt_uint8_t*)rt_calloc(1, p->deep + 1); //more one to store '\0'!
-        p->cnt = 0;
-        p->color = RGB_COLOR_BLACK;
-        p->next = RT_NULL;
-    }
-
-    p->next = h;
-
-    return h;
-}
-
 static rt_err_t _lcd_console_ops_control( struct rt_serial_device *dev,
                                           int cmd,
                                           void *arg )
@@ -362,7 +329,9 @@ static int _lcd_console_ops_putc( struct rt_serial_device *dev,
 {
     struct skt_lcd_console *lcd_console = RT_NULL;
     struct skt_lcd_info *lcd_info = RT_NULL;
-    struct skt_lcd_disp *lcd_disp = RT_NULL;
+    uint32_t src_buf;
+    uint32_t dst_buf;
+    uint32_t buf_size;
     int flush_flag = 0;
     int start, end;
 
@@ -371,7 +340,6 @@ static int _lcd_console_ops_putc( struct rt_serial_device *dev,
 
     lcd_console = (struct skt_lcd_console*)dev;
     lcd_info = (struct skt_lcd_info*)dev->parent.user_data;
-    lcd_disp = &lcd_console->disp_list;
 
     start = 0;
     end = 1;
@@ -406,6 +374,10 @@ static int _lcd_console_ops_putc( struct rt_serial_device *dev,
 #endif
             break;
         default:
+            ch &= 0x7f;
+            if ( !(ch>=32 && ch<127) ) { //check printable
+                return 1;
+            }
             break;
     }
 
@@ -415,7 +387,7 @@ static int _lcd_console_ops_putc( struct rt_serial_device *dev,
         lcd_console->parser.buf[lcd_console->parser.cnt ++] = ch; //store the row char!
         if ('m' == ch)
         {
-            _lcd_console_parser_get_color(&lcd_console->parser, &lcd_disp->next->color);
+            _lcd_console_parser_get_color(&lcd_console->parser, &lcd_info->pen_color);
 
             lcd_console->parser.flag &= ~_PARSER_FLAG_ANALYSE;
             lcd_console->parser.flag ^=  _PARSER_FLAG_FINISH;
@@ -432,47 +404,44 @@ static int _lcd_console_ops_putc( struct rt_serial_device *dev,
     {
         for (; start<end; start++)
         {
-            if ((lcd_console->xn + 1) >= lcd_console->disp_list.cnt)
+            if ((lcd_console->xn + 1) >= lcd_console->xnc)
             {
                 flush_flag = 1;
             }
 
-#ifdef RT_LCD_CONSOLE_PARSER
-            lcd_info->pen_color = lcd_disp->next->color;
-#endif
             lcd_show_char(lcd_console->xn*lcd_console->font_size/2, lcd_console->yn*lcd_console->font_size, lcd_console->font_size, ch);
+            lcd_console->xn ++;
 
-            lcd_disp->next->buf[lcd_console->xn ++] = ch;
-            lcd_disp->next->buf[lcd_console->xn] = '\0';
+            if ( (0 != flush_flag)
+              && ((lcd_console->yn + 1) < lcd_console->ync) )
+            {
+                flush_flag = 0;
+                lcd_console->xn = 0;
+                lcd_console->yn ++;
+            }
         }
 
         if (flush_flag)
         {
-            struct skt_lcd_disp *plist = lcd_console->disp_list.next;
-
-            if ((lcd_console->yn + 1) > lcd_console->disp_list.deep)
+            if ((lcd_console->yn + 1) >= lcd_console->ync)
             {
-                _lcd_clear(lcd_console->panel_color);
+                buf_size = _s_lcd.info.width
+                         * (_s_lcd.info.height - _s_lcd_console.font_size)
+                         * _s_lcd.info.pxsz;
 
-                for (int i=0; i<lcd_console->disp_list.deep; i++)
-                {
-                    plist = plist->next;
-#ifdef RT_LCD_CONSOLE_PARSER
-                    lcd_info->pen_color = plist->color;
-#endif
-                    lcd_show_string(0, i*lcd_console->font_size, lcd_console->font_size, (char*)plist->buf);
-                }
-            }
-            else
-            {
-#ifdef RT_LCD_CONSOLE_PARSER
-                lcd_info->pen_color = plist->color;
-#endif
-                lcd_show_string(0, lcd_console->yn*lcd_console->font_size, lcd_console->font_size, (char*)plist->buf);
+                src_buf = _s_lcd.info.fb;
+                dst_buf = _s_lcd.info.fb
+                        + _s_lcd.info.width * _s_lcd_console.font_size * _s_lcd.info.pxsz;
+
+                rt_memcpy((uint8_t*)src_buf, (uint8_t*)dst_buf, buf_size);
+                rt_memset((uint8_t*)(src_buf+buf_size),
+                          0xFF,
+                          _s_lcd.info.width * _s_lcd_console.font_size * _s_lcd.info.pxsz);
+            } else {
                 lcd_console->yn ++;
+                lcd_info->pen_color = RGB_COLOR_BLACK;
             }
 
-            lcd_disp->next = lcd_disp->next->next;
             lcd_console->xn = 0;
         }
 
@@ -571,21 +540,17 @@ int rt_hw_lcd_init(void)
                            _s_lcd_console.flag,
                            &_g_lcd_info );
 
+    rt_memcpy(&_g_lcd_info, &_s_lcd.info, sizeof(struct skt_lcd_info));
+
     _s_lcd_console.xn = 0;
     _s_lcd_console.yn = 0;
+    _s_lcd_console.xnc = _g_lcd_info.width / _s_lcd_console.font_size * 2;
+    _s_lcd_console.ync = _g_lcd_info.height / _s_lcd_console.font_size;
+
 #ifdef RT_LCD_CONSOLE_PARSER
     rt_memset(&_s_lcd_console.parser, 0x00, sizeof(struct skt_parser));
     _s_lcd_console.parser.deep = GET_ARRAY_NUM(_s_lcd_console.parser.buf);
-#endif
-
-    rt_memcpy(&_g_lcd_info, &_s_lcd.info, sizeof(struct skt_lcd_info));
-    _g_lcd_info.pen_color = _s_lcd_console.pen_color;
-    _g_lcd_info.panel_color = _s_lcd_console.panel_color;
-
-    _s_lcd_console.disp_list.buf  = RT_NULL;
-    _s_lcd_console.disp_list.deep = _g_lcd_info.height / _s_lcd_console.font_size;
-    _s_lcd_console.disp_list.cnt  = _g_lcd_info.width / _s_lcd_console.font_size * 2;
-    _s_lcd_console.disp_list.next = _lcd_console_init_disp_list(_s_lcd_console.disp_list.deep, _s_lcd_console.disp_list.cnt);
+#endif //#ifdef RT_LCD_CONSOLE_PARSER
 #endif //#ifdef RT_LCD_CONSOLE_DEBUG
 
     return RT_EOK;

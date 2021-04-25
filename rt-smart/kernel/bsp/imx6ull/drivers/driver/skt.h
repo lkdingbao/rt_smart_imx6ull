@@ -121,18 +121,6 @@ struct skt_lcd
     rt_uint32_t                 flag;
 };
 
-struct skt_lcd_disp
-{
-    rt_uint8_t                  *buf;
-
-    rt_uint16_t                 deep;
-    rt_uint16_t                 cnt;
-
-    rt_uint32_t                 color;
-
-    struct skt_lcd_disp         *next;
-};
-
 #ifdef RT_LCD_CONSOLE_PARSER
 struct skt_parser
 {
@@ -152,11 +140,10 @@ struct skt_lcd_console
     rt_uint16_t                 xn;
     rt_uint16_t                 yn;
 
-    rt_uint32_t                 pen_color;
-    rt_uint32_t                 panel_color;
-    rt_uint16_t                 font_size;
+    rt_uint16_t                 xnc;
+    rt_uint16_t                 ync;
 
-    struct skt_lcd_disp         disp_list;
+    rt_uint16_t                 font_size;
 
 #ifdef RT_LCD_CONSOLE_PARSER
     struct skt_parser           parser;
