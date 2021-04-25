@@ -11,7 +11,7 @@
 #include <rthw.h>
 #include <rtdevice.h>
 
-#ifdef RT_USING_SDHC
+#ifdef BSP_USING_SDHC
 
 #include <board.h>
 #ifdef RT_USING_LWP
@@ -328,5 +328,5 @@ int rt_hw_sdcard_init(void)
 }
 INIT_DEVICE_EXPORT(rt_hw_sdcard_init);
 
-#endif //#ifdef RT_USING_SDHC
+#endif //#ifdef BSP_USING_SDHC
 

@@ -100,11 +100,9 @@
 #define RT_DFS_ELM_USE_LFN 3
 #define RT_DFS_ELM_MAX_LFN 255
 #define RT_DFS_ELM_DRIVES 2
-#define RT_DFS_ELM_MAX_SECTOR_SIZE 4096
+#define RT_DFS_ELM_MAX_SECTOR_SIZE 512
 #define RT_DFS_ELM_REENTRANT
 #define RT_USING_DFS_DEVFS
-#define RT_USING_DFS_ROMFS
-#define RT_USING_DFS_RAMFS
 
 /* Device Drivers */
 
@@ -114,16 +112,9 @@
 #define RT_SYSTEM_WORKQUEUE_STACKSIZE 2048
 #define RT_SYSTEM_WORKQUEUE_PRIORITY 23
 #define RT_USING_SERIAL
-#define RT_SERIAL_USING_DMA
 #define RT_SERIAL_RB_BUFSZ 64
 #define RT_USING_I2C
-#define RT_USING_I2C_BITOPS
 #define RT_USING_PIN
-#define RT_USING_MTD_NOR
-#define RT_USING_MTD_NAND
-#define RT_MTD_NAND_DEBUG
-#define RT_USING_RTC
-#define RT_USING_SOFT_RTC
 #define RT_USING_SDIO
 #define RT_SDIO_STACK_SIZE 512
 #define RT_SDIO_THREAD_PRIORITY 15
@@ -131,12 +122,6 @@
 #define RT_MMCSD_THREAD_PREORITY 22
 #define RT_MMCSD_MAX_PARTITION 16
 #define RT_USING_SPI
-#define RT_USING_SPI_MSD
-#define RT_USING_SFUD
-#define RT_SFUD_USING_SFDP
-#define RT_SFUD_USING_FLASH_INFO_TABLE
-#define RT_SFUD_SPI_MAX_HZ 50000000
-#define RT_USING_WDT
 
 /* Using USB */
 
@@ -146,9 +131,6 @@
 #define RT_USING_LIBC
 #define RT_USING_MUSL
 #define RT_USING_POSIX
-#define RT_USING_POSIX_MMAP
-#define RT_USING_POSIX_TERMIOS
-#define RT_USING_POSIX_AIO
 #define RT_USING_POSIX_CLOCKTIME
 
 /* Network */
@@ -281,7 +263,6 @@
 
 /* Select UART Driver */
 
-#define RT_USING_UART
 #define BSP_USING_UART1
 
 /* Select SPI Driver */
@@ -298,12 +279,15 @@
 #define RT_USING_RGBLCD
 #define BSP_LCD_WIDTH 800
 #define BSP_LCD_HEIGHT 480
-#define RT_LCD_CONSOLE_DEBUG
-#define RT_LCD_CONSOLE_PARSER
+#define BSP_LCD_CONSOLE_DEBUG
+#define BSP_LCD_CONSOLE_PARSER
+
+/* Select SD Card Driver */
+
+#define BSP_USING_SDHC
 
 /* Platform Device Configuration */
 
-#define RT_USING_LAN8720
 
 /* Third-party Libraries Configuration */
 

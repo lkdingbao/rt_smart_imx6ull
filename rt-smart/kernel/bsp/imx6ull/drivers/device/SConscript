@@ -9,9 +9,6 @@ objs = []
 if not GetDepend('RT_USING_GT7147'):
     SrcRemove(src, ['drv_gt9147.c'])
 
-if not GetDepend('RT_USING_ICM20608'):
-    SrcRemove(src, ['drv_icm20608.c'])
-
 if not GetDepend('RT_USING_PCF8574'):
     SrcRemove(src, ['drv_pcf8574x.c'])
 

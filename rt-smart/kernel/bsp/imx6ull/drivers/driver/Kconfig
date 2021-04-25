@@ -2,35 +2,30 @@ menu "Platform Driver Configuration"
 
 menu "Select UART Driver"
     if RT_USING_SERIAL
-        config RT_USING_UART
-            bool "Enable UART"
-            default y if RT_USING_SERIAL
-        if RT_USING_UART
-            config BSP_USING_UART1
-                bool "Enable UART1"
-                default y
-            config BSP_USING_UART2
-                bool "Enable UART2"
-                default n
-            config BSP_USING_UART3
-                bool "Enable UART3"
-                default n
-            config BSP_USING_UART4
-                bool "Enable UART4"
-                default n
-            config BSP_USING_UART5
-                bool "Enable UART5"
-                default n
-            config BSP_USING_UART6
-                bool "Enable UART6"
-                default n
-            config BSP_USING_UART7
-                bool "Enable UART7"
-                default n
-            config BSP_USING_UART8
-                bool "Enable UART8"
-                default n
-        endif
+        config BSP_USING_UART1
+            bool "Enable UART1"
+            default y
+        config BSP_USING_UART2
+            bool "Enable UART2"
+            default n
+        config BSP_USING_UART3
+            bool "Enable UART3"
+            default n
+        config BSP_USING_UART4
+            bool "Enable UART4"
+            default n
+        config BSP_USING_UART5
+            bool "Enable UART5"
+            default n
+        config BSP_USING_UART6
+            bool "Enable UART6"
+            default n
+        config BSP_USING_UART7
+            bool "Enable UART7"
+            default n
+        config BSP_USING_UART8
+            bool "Enable UART8"
+            default n
     endif
 endmenu
 
@@ -82,12 +77,12 @@ config RT_USING_RGBLCD
             int "Height of LCD panel"
             default 480
 
-        config RT_LCD_CONSOLE_DEBUG
+        config BSP_LCD_CONSOLE_DEBUG
             bool "Use LCD as console device"
             default n
             
-            if RT_LCD_CONSOLE_DEBUG
-                config RT_LCD_CONSOLE_PARSER
+            if BSP_LCD_CONSOLE_DEBUG
+                config BSP_LCD_CONSOLE_PARSER
                     bool "Enable LCD console parser function"
                     default n
             endif
@@ -95,10 +90,11 @@ config RT_USING_RGBLCD
 endmenu
 
 menu "Select SD Card Driver"
-config RT_USING_SDHC
-    bool "Enable SDHC"
-    default y
-
+    if RT_USING_SDIO
+        config BSP_USING_SDHC
+            bool "Enable SDHC"
+            default y
+    endif
 endmenu
 
 endmenu

@@ -12,7 +12,7 @@
 
 #include "skt.h"
 
-#ifdef RT_USING_SDHC
+#ifdef BSP_USING_SDHC
 
 /* Fixed value, not edit! */
 #define SDCARD_CONTROL_PIN_NUM      (6)
@@ -30,6 +30,6 @@ struct skt_sddev
     rt_uint32_t                     flag;
 };
 
-#endif //#ifdef RT_USING_SDHC
+#endif //#ifdef BSP_USING_SDHC
 #endif //#ifndef __DRV_SDCARD_H__
 

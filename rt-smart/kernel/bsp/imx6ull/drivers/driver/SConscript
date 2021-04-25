@@ -6,7 +6,7 @@ list = os.listdir(cwd)
 CPPPATH = [cwd]
 objs = []
 
-if not GetDepend('RT_USING_UART'):
+if not GetDepend('RT_USING_SERIAL'):
     SrcRemove(src, ['drv_uart.c'])
 
 if not GetDepend('RT_USING_SPI'):
@@ -18,7 +18,7 @@ if not GetDepend('RT_USING_I2C'):
 if not GetDepend('RT_USING_RGBLCD'):
     SrcRemove(src, ['drv_lcd.c'])
 
-if not GetDepend('RT_USING_SDHC'):
+if not GetDepend('BSP_USING_SDHC'):
     SrcRemove(src, ['drv_sdhc.c'])
 
 group = DefineGroup('Driver', src, depend = [''], CPPPATH = CPPPATH)

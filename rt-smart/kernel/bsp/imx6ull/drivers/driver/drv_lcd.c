@@ -33,8 +33,8 @@
 #define _LCD_WIDTH                  BSP_LCD_WIDTH
 #define _LCD_HEIGHT                 BSP_LCD_HEIGHT
 
-#if ( defined (RT_LCD_CONSOLE_DEBUG)  \
-   && defined (RT_LCD_CONSOLE_PARSER) )
+#if ( defined (BSP_LCD_CONSOLE_DEBUG)  \
+   && defined (BSP_LCD_CONSOLE_PARSER) )
 #define _PARSER_FLAG_ANALYSE        (1 << 0)
 #define _PARSER_FLAG_FINISH         (1 << 1)
 #endif
@@ -102,7 +102,7 @@ _internal_rw struct skt_gpio _s_gpio_info[] =
     {IOMUXC_LCD_VSYNC_LCDIF_VSYNC,   0, 0x79},
 };
 
-#ifdef RT_LCD_CONSOLE_DEBUG
+#ifdef BSP_LCD_CONSOLE_DEBUG
 _internal_rw struct skt_lcd_console _s_lcd_console = 
 {
     .name = "clcd",
@@ -111,8 +111,8 @@ _internal_rw struct skt_lcd_console _s_lcd_console =
 };
 #endif
 
-#if ( defined (RT_LCD_CONSOLE_DEBUG)  \
-   && defined (RT_LCD_CONSOLE_PARSER) )
+#if ( defined (BSP_LCD_CONSOLE_DEBUG)  \
+   && defined (BSP_LCD_CONSOLE_PARSER) )
 _internal_ro rt_uint32_t _k_console_color_tbl[] = 
 {
     RGB_COLOR_BLACK,    //30
@@ -283,8 +283,8 @@ _lcd_ops_control_exit:
     return result;
 }
 
-#if ( defined (RT_LCD_CONSOLE_DEBUG)  \
-   && defined (RT_LCD_CONSOLE_PARSER) )
+#if ( defined (BSP_LCD_CONSOLE_DEBUG)  \
+   && defined (BSP_LCD_CONSOLE_PARSER) )
 static void _lcd_console_parser_get_color( const struct skt_parser *parser, rt_uint32_t *pcolor )
 {
     rt_uint32_t color_code = 0;
@@ -314,9 +314,9 @@ static void _lcd_console_parser_get_color( const struct skt_parser *parser, rt_u
         *pcolor = _k_console_color_tbl[color_code];
     }
 }
-#endif //#ifdef RT_LCD_CONSOLE_PARSER
+#endif //#ifdef BSP_LCD_CONSOLE_PARSER
 
-#ifdef RT_LCD_CONSOLE_DEBUG
+#ifdef BSP_LCD_CONSOLE_DEBUG
 static rt_err_t _lcd_console_ops_control( struct rt_serial_device *dev,
                                           int cmd,
                                           void *arg )
@@ -366,7 +366,7 @@ static int _lcd_console_ops_putc( struct rt_serial_device *dev,
             ch = ' ';
             break;
         case '\033':
-#ifdef RT_LCD_CONSOLE_PARSER
+#ifdef BSP_LCD_CONSOLE_PARSER
             lcd_console->parser.flag |= _PARSER_FLAG_ANALYSE;
             lcd_console->parser.cnt = 0;
 #else
@@ -381,7 +381,7 @@ static int _lcd_console_ops_putc( struct rt_serial_device *dev,
             break;
     }
 
-#ifdef RT_LCD_CONSOLE_PARSER
+#ifdef BSP_LCD_CONSOLE_PARSER
     if (lcd_console->parser.flag & _PARSER_FLAG_ANALYSE)
     {
         lcd_console->parser.buf[lcd_console->parser.cnt ++] = ch; //store the row char!
@@ -464,7 +464,7 @@ _internal_ro struct rt_uart_ops _k_lcd_console_ops =
     RT_NULL,                    /* getc */
     RT_NULL,                    /* dma_transmit */
 };
-#endif //#ifdef RT_LCD_CONSOLE_DEBUG
+#endif //#ifdef BSP_LCD_CONSOLE_DEBUG
 
 #ifdef RT_USING_DEVICE_OPS
 _internal_ro struct rt_device_ops _k_lcd_ops =
@@ -532,7 +532,7 @@ int rt_hw_lcd_init(void)
     _lcd_clock_init(42, 1, 4, 8);
     _lcd_periph_init(&_s_lcd);
 
-#ifdef RT_LCD_CONSOLE_DEBUG
+#ifdef BSP_LCD_CONSOLE_DEBUG
     _s_lcd_console.parent.ops = &_k_lcd_console_ops;
 
     rt_hw_serial_register( &_s_lcd_console.parent,
@@ -547,11 +547,11 @@ int rt_hw_lcd_init(void)
     _s_lcd_console.xnc = _g_lcd_info.width / _s_lcd_console.font_size * 2;
     _s_lcd_console.ync = _g_lcd_info.height / _s_lcd_console.font_size;
 
-#ifdef RT_LCD_CONSOLE_PARSER
+#ifdef BSP_LCD_CONSOLE_PARSER
     rt_memset(&_s_lcd_console.parser, 0x00, sizeof(struct skt_parser));
     _s_lcd_console.parser.deep = GET_ARRAY_NUM(_s_lcd_console.parser.buf);
-#endif //#ifdef RT_LCD_CONSOLE_PARSER
-#endif //#ifdef RT_LCD_CONSOLE_DEBUG
+#endif //#ifdef BSP_LCD_CONSOLE_PARSER
+#endif //#ifdef BSP_LCD_CONSOLE_DEBUG
 
     return RT_EOK;
 }

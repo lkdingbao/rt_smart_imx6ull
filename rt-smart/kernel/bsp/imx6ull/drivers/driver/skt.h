@@ -121,7 +121,7 @@ struct skt_lcd
     rt_uint32_t                 flag;
 };
 
-#ifdef RT_LCD_CONSOLE_PARSER
+#ifdef BSP_LCD_CONSOLE_PARSER
 struct skt_parser
 {
     rt_uint8_t                  buf[8];
@@ -145,7 +145,7 @@ struct skt_lcd_console
 
     rt_uint16_t                 font_size;
 
-#ifdef RT_LCD_CONSOLE_PARSER
+#ifdef BSP_LCD_CONSOLE_PARSER
     struct skt_parser           parser;
 #endif
 
@@ -169,9 +169,9 @@ struct skt_touch_data
     rt_uint8_t                  max; //max supported point number
     rt_uint8_t                  num; //current get point number
 
-#ifdef TOUCH_POINT_NUM
-    uint16_t                    x[TOUCH_POINT_NUM];
-    uint16_t                    y[TOUCH_POINT_NUM];
+#ifdef BSP_TOUCH_POINT_NUM
+    uint16_t                    x[BSP_TOUCH_POINT_NUM];
+    uint16_t                    y[BSP_TOUCH_POINT_NUM];
 #else
     uint16_t                    x[1];
     uint16_t                    y[1];

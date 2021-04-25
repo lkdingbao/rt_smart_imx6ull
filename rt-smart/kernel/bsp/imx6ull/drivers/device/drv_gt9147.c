@@ -35,7 +35,7 @@
 #define _BUS_I2C_ADDR       0x14
 
 /* GT9174 only support 5 touch points! */
-#define _TOUCH_POINT_NUM    TOUCH_POINT_NUM
+#define _TOUCH_POINT_NUM    BSP_TOUCH_POINT_NUM
 
 #define _TOUCH_WIDTH        BSP_LCD_WIDTH
 #define _TOUCH_HEIGHT       BSP_LCD_HEIGHT

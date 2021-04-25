@@ -6,15 +6,10 @@ config RT_USING_GT7147
     default y
 
     if RT_USING_GT7147
-        config TOUCH_POINT_NUM
+        config BSP_TOUCH_POINT_NUM
             int "Number of touch point"
             default 5
     endif
-
-config RT_USING_ICM20608
-    bool "Enable ICM20608"
-    select RT_USING_SPI
-    default n
 
 config RT_USING_PCF8574
     bool "Enable PCF8574"

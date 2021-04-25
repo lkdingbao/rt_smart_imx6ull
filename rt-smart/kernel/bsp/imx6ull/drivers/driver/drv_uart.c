@@ -292,7 +292,7 @@ static int _uart_ops_putc( struct rt_serial_device *dev,
     while (0 == (periph->USR2 & UART_USR2_TXDC_MASK));
     periph->UTXD = ch;
 
-#ifdef RT_LCD_CONSOLE_DEBUG
+#ifdef BSP_LCD_CONSOLE_DEBUG
     extern int lcd_console_putc(char ch);
     lcd_console_putc(ch);
 #endif
