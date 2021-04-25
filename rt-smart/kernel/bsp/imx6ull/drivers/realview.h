@@ -32,8 +32,9 @@
 #define REALVIEW_UART7_BASE         UART7_BASE  /* UART 7 */
 #define REALVIEW_UART8_BASE         UART8_BASE  /* UART 8 */
 
-#define REALVIEW_SSP_BASE           0U          /* Synchronous Serial Port */
-#define REALVIEW_WATCHDOG_BASE      0U          /* watchdog interface */
+#define REALVIEW_WATCHDOG1_BASE     WDOG1_BASE  /* watchdog 1 */
+#define REALVIEW_WATCHDOG2_BASE     WDOG2_BASE  /* watchdog 2 */
+#define REALVIEW_WATCHDOG3_BASE     WDOG3_BASE  /* watchdog 3 */
 
 #define REALVIEW_GPIO1_BASE         GPIO1_BASE  /* GPIO port 0 */
 #define REALVIEW_GPIO2_BASE         GPIO2_BASE  /* GPIO port 1 */
@@ -86,6 +87,8 @@
 
 #define REALVIEW_USDHC1_BASE        USDHC1_BASE
 #define REALVIEW_USDHC2_BASE        USDHC2_BASE
+
+#define REALVIEW_SRC_BASE           SRC_BASE
 
 #include <rtdef.h>
 //#include <armv7.h>
