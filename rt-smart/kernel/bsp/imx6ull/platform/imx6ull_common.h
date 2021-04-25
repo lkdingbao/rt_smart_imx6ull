@@ -24,6 +24,7 @@
 #include "fsl_phy.h"
 #include "fsl_usdhc.h"
 #include "fsl_card.h"
+#include "fsl_snvs_hp.h"
 
 #endif //#ifndef __IMX6ULL_COMMON_H__
 

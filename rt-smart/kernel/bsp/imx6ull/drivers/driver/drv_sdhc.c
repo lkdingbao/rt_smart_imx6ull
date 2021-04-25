@@ -1,6 +1,6 @@
 /*
- * SD-Card
- *   SD-Card driver file
+ * IMX6ULL
+ *   imx6ull sdhc driver file
  *
  * Change Logs:
  * Date           Author       Notes

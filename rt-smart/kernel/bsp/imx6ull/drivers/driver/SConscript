@@ -21,6 +21,9 @@ if not GetDepend('RT_USING_RGBLCD'):
 if not GetDepend('BSP_USING_SDHC'):
     SrcRemove(src, ['drv_sdhc.c'])
 
+if not GetDepend('BSP_USING_ONCHIP_RTC'):
+    SrcRemove(src, ['drv_rtc.c'])
+
 group = DefineGroup('Driver', src, depend = [''], CPPPATH = CPPPATH)
 
 for d in list:

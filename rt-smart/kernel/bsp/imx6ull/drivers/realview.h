@@ -41,7 +41,7 @@
 #define REALVIEW_GPIO4_BASE         GPIO4_BASE  /* GPIO port 3 */
 #define REALVIEW_GPIO5_BASE         GPIO5_BASE  /* GPIO port 4 */
 
-#define REALVIEW_RTC_BASE           0U          /* Real Time Clock */
+#define REALVIEW_RTC_BASE           SNVS_BASE   /* Real Time Clock */
 #define REALVIEW_TIMER0_1_BASE      0U          /* Timer 0 and 1 */
 #define REALVIEW_TIMER2_3_BASE      0U          /* Timer 2 and 3 */
 #define REALVIEW_TIMER4_5_BASE      0U          /* Timer 4/5 */

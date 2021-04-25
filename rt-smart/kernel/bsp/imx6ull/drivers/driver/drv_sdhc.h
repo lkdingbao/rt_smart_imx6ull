@@ -1,14 +1,14 @@
 /*
- * LAN8720A
- *   LAN8720A driver file
+ * IMX6ULL
+ *   imx6ull sdhc driver file
  *
  * Change Logs:
  * Date           Author       Notes
- * 2021-01-30     Lyons        first version
+ * 2021-04-23     Lyons        first version
  */
 
-#ifndef __DRV_SDCARD_H__
-#define __DRV_SDCARD_H__
+#ifndef __DRV_SDHC_H__
+#define __DRV_SDHC_H__
 
 #include "skt.h"
 
@@ -31,5 +31,5 @@ struct skt_sddev
 };
 
 #endif //#ifdef BSP_USING_SDHC
-#endif //#ifndef __DRV_SDCARD_H__
+#endif //#ifndef __DRV_SDHC_H__
 

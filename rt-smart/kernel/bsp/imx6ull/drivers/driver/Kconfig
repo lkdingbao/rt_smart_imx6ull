@@ -97,4 +97,12 @@ menu "Select SD Card Driver"
     endif
 endmenu
 
+menu "Select RTC Driver"
+    if RT_USING_RTC
+        config BSP_USING_ONCHIP_RTC
+            bool "Enable On-Chip rtc"
+            default y
+    endif
+endmenu
+
 endmenu
