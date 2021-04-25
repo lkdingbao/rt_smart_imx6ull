@@ -34,24 +34,21 @@
 
 每次打开 env 后还会设置临时的环境变量，只对当前的 env 内部使用  
 
-#### 2. 下载编译工具链
-
-在 env 软件的 `.\tools\gnu_gcc` 目录下 clone 仓库 `https://gitee.com/dengchow/rtt_compile_tools.git`  
-或者自行到 rtt 官网下载压缩包并解压  
-
-#### 3. 添加编译工具路径
+#### 2. 添加编译工具路径
 
 **目前已经兼容 rt-thread 和 rt-smart**  
 
 1. 配置 rt-smart 环境  
 
-修改 `.\proj_smart\envconfig.bat`  
+*如果仓库自带的 rt-smart 内核代码，则无需修改*  
+
+修改 `.\rt-smart\kernel\bsp\imx6ull\proj_smart\envconfig.bat`  
 
   - `RTT_EXEC_PATH`，设置成编译工具所在的路径  
   - `RTT_PROJ`，设置为 `rt-smart`  
 
 ```
-@set RTT_ROOT=%cd%\..\..\..\..\
+@set RTT_ROOT=xxx\rt-thread :: xxx 为 rt-thread 内核代码的路径，同时需要切换到 rt-smart 分支
 @set BSP_ROOT=%cd%\..
 
 @set RTT_TOOL_PATH=%cd%\..\scripts
@@ -62,7 +59,7 @@
 @set RTT_CC=gcc
 @set RTT_CC_PREFIX=arm-linux-musleabi-
 
-@set RTT_EXEC_PATH=%ENV_ROOT%\tools\gnu_gcc\rtt_compile_tools\arm_gcc\musleabi\bin
+@set RTT_EXEC_PATH=%ENV_ROOT%\tools\gnu_gcc\arm_gcc\musleabi\bin
 @set PATH=%RTT_EXEC_PATH%;%RTT_TOOL_PATH%;%ENV_ROOT%\tools\gnu_gcc\arm_gcc\mingw\bin;%PATH%
 
 @echo config finished.
@@ -70,14 +67,14 @@
 
 2. 配置rt-thread 环境  
 
-修改 `.\proj_rtt\envconfig.bat`  
+修改 `.\rt-smart\kernel\bsp\imx6ull\proj_rtt\envconfig.bat`  
 
   - `RTT_EXEC_PATH`，设置成编译工具所在的路径  
   - `RTT_PROJ`，设置为 `rt-thread`  
   - `RTT_ROOT`，设置为 rt-thread 内核路径（可直接使用 git 上的内核版本）  
 
 ```
-@set RTT_ROOT=%cd%\..\..\..\..\
+@set RTT_ROOT=xxx\rt-thread :: xxx 为 rt-thread 内核代码的路径
 @set BSP_ROOT=%cd%\..
 
 @set RTT_TOOL_PATH=%cd%\..\scripts
@@ -103,6 +100,9 @@
 1. 使用 git 上的 *最新* 版本（单独 clone rt-thread 并切换分支到 `rt-smart`）  
 进入 `proj_smart_git` 工程下编译  
 
+2. 使用本仓库内的版本（内核版本为 `rt-smart-20201125`）  
+进入 `proj_smart` 工程下编译  
+
 #### 2. RT-Thread
 
 可从以下方式加入 rt-thread 内核  
@@ -124,18 +124,21 @@
 |SPI|√||
 |LCD|√||
 |ENET|√||
+|SDHC|√||
 |**设备**|||
 |ICM20608|√||
 |PCF8574x|√||
 |GT9147|√||
 |LAN8720|√||
+|TF-Card|√||
 |**第三方库**|||
 |LittlevGL|√|Ver 7.9.1|
 |LwIP|√|Ver 2.0.2|
+|elm-chan FatFs|√||
 
 ### 三、测试
 
-1. 在 `.\proj_xxx\` 目录下打开 env 工具  
+1. 在 `.\rt-smart\kernel\bsp\imx6ull\proj_xxx\` 目录下打开 env 工具  
 
 2. 输入 `./envconfig.bat`，回车  
 
@@ -150,7 +153,7 @@
 
 5. 如果使用 SD 方式下载，需要修改正点原子的 imxdownload 工具  
 
-打开路径 `.\scripts\` 下 `imxdownload.c` 文件  
+打开路径 `.\rt-smart\kernel\bsp\imx6ull\scripts\` 下 `imxdownload.c` 文件  
 修改以下两个宏  
 
 ```

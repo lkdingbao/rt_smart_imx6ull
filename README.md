@@ -2,6 +2,26 @@
 
 ## 说明
 
+### 〇、写在前面
+
+程序是基于 fsl 的 sdk 二次开发的  
+考虑到后期 rt-smart 适配更多的板卡后会进行“较大”规模的重构，因此程序程序中并未使用严格的 rtt 结构  
+
+比如：触摸屏、网卡驱动并未严格按照驱动层结构书写  
+
+**因此 bsp 取名 quicktest ，本意为快速适配测试，并非快速开发！**  
+
+更多的是摸索 imx6ull 的外设驱动方式，挖坑填坑，仅此而已  
+
+
+目前由于在 imx6ull 上运行 rt-smart 尚处于开发阶段（同时 rt-smart 也在不断完善）  
+因此就目前版本（12:58 2021/4/19），会出现无法链接或者下载后程序宕机的问题  
+
+需要对内核进行适当修改（修改方式可参考 `.\docs\20210419` 文件夹）  
+
+如果仍旧出现问题，可联系邮箱 `ytesliang@163.com`  
+我会在当天晚上统一回复  
+
 ### 一、环境配置
 
 #### 1. 配置环境变量
@@ -104,14 +124,17 @@
 |SPI|√||
 |LCD|√||
 |ENET|√||
+|SDHC|√||
 |**设备**|||
 |ICM20608|√||
 |PCF8574x|√||
 |GT9147|√||
 |LAN8720|√||
+|TF-Card|√||
 |**第三方库**|||
 |LittlevGL|√|Ver 7.9.1|
 |LwIP|√|Ver 2.0.2|
+|elm-chan FatFs|√||
 
 ### 三、测试
 
@@ -211,7 +234,14 @@ clear ...
 clear all processing files success.
 ```
 
-特别的，可以使用 `.\envconfig.bat clean` 来直接删除 `build` 文件夹实现清除工程的作用  
+特别的，可以使用 `.\envconfig.bat clean` 来直接删除 `build` 文件夹实现清除内核编译生成的 .o 文件  
+
+如果需要完全的删除编译中间文件，可使用以下命令  
+
+```
+> scons --clean
+> .\envconfig.bat clean
+```
 
 ### 5. 生成反汇编文件
 
@@ -227,6 +257,7 @@ clear all processing files success.
 2. 平台程序可不经就该完全兼容 rt-smart 和 rt-thread  
 
 3. 平台程序使用 fsl 的 sdk 进行开发，代码较为臃肿，但目前暂无整合计划  
-rt-thread 的 bsp 提供 imx6ull 的寄存器文件，如不习惯 sdk ，可简单根据 sdk 整合为寄存器操作  
+rt-thread 分支下的 bsp 提供 imx6ull 的寄存器文件，如不习惯 sdk ，可简单根据 sdk 整合为寄存器操作  
 
 4. **建议不要同时打开多个 env 软件**，保证同一时间只打开一个 env 软件，否则会产生意想不到的问题  
+*原因：* 部分 .o 文件直接生成在源文件目录下，链接时出问题（切换 rt-thread/rt-smart 时必须重新编译，切换 env 时需要先 `scons --clean`）  
