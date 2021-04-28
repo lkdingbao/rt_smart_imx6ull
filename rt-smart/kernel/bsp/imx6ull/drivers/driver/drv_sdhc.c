@@ -41,7 +41,7 @@
 _internal_rw struct skt_sddev _s_sdcard_device = {
     .name = "sd0",
     .periph.paddr = BOARD_SD_HOST_BASEADDR,
-    .irqno = BOARD_SD_HOST_IRQ, //not use irq yet!
+    .irqno = RT_NULL, //not use irq yet!
     .gpio = {
         {IOMUXC_SD1_CLK_USDHC1_CLK,         0U, 0x17049},
         {IOMUXC_SD1_CMD_USDHC1_CMD,         0U, 0x17089},

@@ -116,6 +116,7 @@
 #define RT_SERIAL_RB_BUFSZ 64
 #define RT_USING_I2C
 #define RT_USING_PIN
+#define RT_USING_MTD_NAND
 #define RT_USING_RTC
 #define RT_USING_SDIO
 #define RT_SDIO_STACK_SIZE 512
@@ -288,6 +289,10 @@
 /* Select RTC Driver */
 
 #define BSP_USING_ONCHIP_RTC
+
+/* Select NAND Flash Driver */
+
+#define BSP_USING_NAND
 
 /* Platform Device Configuration */
 

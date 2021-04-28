@@ -43,17 +43,11 @@
 #define REALVIEW_GPIO5_BASE         GPIO5_BASE  /* GPIO port 4 */
 
 #define REALVIEW_RTC_BASE           SNVS_BASE   /* Real Time Clock */
-#define REALVIEW_TIMER0_1_BASE      0U          /* Timer 0 and 1 */
-#define REALVIEW_TIMER2_3_BASE      0U          /* Timer 2 and 3 */
-#define REALVIEW_TIMER4_5_BASE      0U          /* Timer 4/5 */
-#define REALVIEW_TIMER6_7_BASE      0U          /* Timer 6/7 */
 
 #define REALVIEW_SCTL_BASE          0x021DC000u /* System Controller */
 
 #define REALVIEW_CLCD_BASE          LCDIF_BASE  /* CLCD */
 
-#define REALVIEW_DMC_BASE           0U          /* DMC configuration */
-#define REALVIEW_SMC_BASE           0U          /* SMC configuration */
 #define REALVIEW_CAN_BASE           0U          /* CAN bus */
 
 #define REALVIEW_GIC_DIST_BASE      (ARM_GIC_CPU_BASE+0x1000)  /* Generic interrupt controller distributor */
@@ -89,6 +83,10 @@
 #define REALVIEW_USDHC2_BASE        USDHC2_BASE
 
 #define REALVIEW_SRC_BASE           SRC_BASE
+
+#define REALVIEW_GPMI_BASE          GPMI_BASE
+#define REALVIEW_BCH_BASE           BCH_BASE
+#define REALVIEW_APBH_BASE          APBH_BASE
 
 #include <rtdef.h>
 //#include <armv7.h>
