@@ -88,6 +88,8 @@
 #define REALVIEW_BCH_BASE           BCH_BASE
 #define REALVIEW_APBH_BASE          APBH_BASE
 
+#define REALVIEW_CSI_BASE           CSI_BASE
+
 #include <rtdef.h>
 //#include <armv7.h>
 

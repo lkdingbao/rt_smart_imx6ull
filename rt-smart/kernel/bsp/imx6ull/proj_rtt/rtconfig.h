@@ -273,8 +273,14 @@
 
 #define BSP_USING_SDHC
 
+/* Select RTC Driver */
+
+/* Select NAND Flash Driver */
+
 /* Platform Device Configuration */
 
+#define RT_USING_CAMERA
+#define RT_USING_OV2640
 
 /* Third-party Libraries Configuration */
 

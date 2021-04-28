@@ -279,8 +279,6 @@
 #define RT_USING_RGBLCD
 #define BSP_LCD_WIDTH 800
 #define BSP_LCD_HEIGHT 480
-#define BSP_LCD_CONSOLE_DEBUG
-#define BSP_LCD_CONSOLE_PARSER
 
 /* Select SD Card Driver */
 
@@ -292,10 +290,12 @@
 
 /* Select NAND Flash Driver */
 
-#define BSP_USING_NAND
 
 /* Platform Device Configuration */
 
+#define RT_USING_ENET
+#define RT_USING_CAMERA
+#define RT_USING_OV2640
 
 /* Third-party Libraries Configuration */
 

@@ -16,8 +16,24 @@ config RT_USING_PCF8574
     select RT_USING_I2C
     default y
 
-config RT_USING_LAN8720
-    bool "Enable LAN8720"
+menuconfig RT_USING_ENET
+    bool "Select Enet Device"
     default y
+
+    if RT_USING_ENET
+        config RT_USING_LAN8720
+            bool "Enable LAN8720"
+            default y
+    endif
+
+menuconfig RT_USING_CAMERA
+    bool "Select Camera Device"
+    default y
+
+    if RT_USING_CAMERA
+        config RT_USING_OV2640
+            bool "Enable OV2640"
+            default y
+    endif
 
 endmenu

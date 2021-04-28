@@ -24,7 +24,7 @@
 #include "drv_gt9147.h"
 #include "skt.h"
 
-#define DBG_TAG "GT9147"
+#define DBG_TAG "drv.gt9147"
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 

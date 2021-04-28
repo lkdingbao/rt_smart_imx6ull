@@ -32,6 +32,7 @@
 
 #define _LCD_WIDTH                  BSP_LCD_WIDTH
 #define _LCD_HEIGHT                 BSP_LCD_HEIGHT
+#define _LCD_PIXEL_SIZE             4
 
 #if ( defined (BSP_LCD_CONSOLE_DEBUG)  \
    && defined (BSP_LCD_CONSOLE_PARSER) )
@@ -49,7 +50,7 @@ _internal_rw struct skt_lcd _s_lcd =
     .info = {
         .width  = _LCD_WIDTH,
         .height = _LCD_HEIGHT,
-        .pxsz   = 4,
+        .pxsz   = _LCD_PIXEL_SIZE,
 
         .hsw  = 3,
         .hbp  = 88,

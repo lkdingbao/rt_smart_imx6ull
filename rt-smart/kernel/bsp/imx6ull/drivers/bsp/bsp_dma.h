@@ -89,7 +89,9 @@ struct mxs_dma_desc {
 	struct list_head	node;
 };
 
+#ifndef offsetof
 #define offsetof(s,m) ((size_t)&(((s*)0)->m))
+#endif
 
 #endif	//#ifndef __BSP_DMA_H__
 
