@@ -22,8 +22,9 @@
 #include "__def.h"
 #include "realview.h"
 #include "drv_i2c.h"
-#include "drv_ov2640.h"
 #include "drv_pin.h"
+#include "drv_ov2640.h"
+#include "bsp_lcdapi.h"
 #include "skt.h"
 
 #define DBG_TAG "drv.ov2640"
@@ -32,6 +33,9 @@
 
 #define _DEVICE_NAME            "ov2640"
 #define _BUS_NAME               "i2c2"
+
+/* set this to 1 to enable camera test demo. */
+#define CAMERA_DEBUG_EN 1
 
 #define _CAMERA_WIDTH           BSP_LCD_WIDTH
 #define _CAMERA_HEIGHT          BSP_LCD_HEIGHT
@@ -42,6 +46,8 @@
 
 #define _OV2640_DELAY_US(t)     rt_hw_us_delay(t)
 #define _OV2640_DELAY_MS(t)     rt_hw_ms_delay(t)
+
+#include "ov2640cfg.h"
 
 #define _OV2640_INIT_REG_TBL    ov2640_sxga_init_reg_tbl
 //ov2640_sxga_init_reg_tbl
@@ -79,14 +85,28 @@ _internal_rw struct skt_cameradev _s_ov2640 = {
     .flag = 0,
 };
 
-AT_NONCACHEABLE_SECTION_ALIGN(static uint16_t s_frameBuffer[_CAMERA_FRAME_COUNT][_CAMERA_HEIGHT][_CAMERA_WIDTH], 64);
+/* only used for csi operate. not editable! */
+_internal_rw csi_resource_t csi_resource;
+_internal_rw csi_private_data_t csi_privateData;
 
-static csi_resource_t csiResource;
-static csi_private_data_t csiPrivateData;
-
-camera_receiver_handle_t cameraReceiver = {
-    .resource = &csiResource, .ops = &csi_ops, .privateData = &csiPrivateData,
+_internal_rw camera_receiver_handle_t _s_camera_receiver = {
+    .resource = &csi_resource,
+    .ops = &csi_ops,
+    .privateData = &csi_privateData,
 };
+
+_internal_rw camera_config_t _s_camera_config = {
+    .pixelFormat = kVIDEO_PixelFormatRGB565,
+    .bytesPerPixel = _CAMERA_PIXEL_SIZE,
+    .resolution = FSL_VIDEO_RESOLUTION(_CAMERA_WIDTH, _CAMERA_HEIGHT),
+    .frameBufferLinePitch_Bytes = _CAMERA_WIDTH * _CAMERA_PIXEL_SIZE,
+    .interface = kCAMERA_InterfaceGatedClock,
+    .controlFlags = (kCAMERA_HrefActiveHigh | kCAMERA_DataLatchOnRisingEdge),
+    .framePerSec = 30,
+};
+
+_internal_rw AT_NONCACHEABLE_SECTION_ALIGN( uint16_t _s_frame_buf[_CAMERA_FRAME_COUNT][_CAMERA_HEIGHT][_CAMERA_WIDTH],
+                                        64 );
 
 static void _write_data( rt_device_t i2cdev, rt_uint16_t reg, rt_uint8_t *data, rt_uint16_t len )
 {
@@ -104,7 +124,7 @@ static void _read_data( rt_device_t i2cdev, rt_uint16_t reg, rt_uint8_t *data, r
     rt_device_read(i2cdev, reg, data, len);
 }
 
-void _write_one_data( rt_device_t i2cdev, rt_uint16_t reg, rt_uint8_t data )
+static void _write_one_data( rt_device_t i2cdev, rt_uint16_t reg, rt_uint8_t data )
 {
     _write_data(i2cdev, reg, &data, 1);
 }
@@ -167,123 +187,107 @@ static void _csi_gpio_init( void )
 
 static void _csi_device_init( void )
 {
-    camera_config_t cameraConfig = {
-        .pixelFormat = kVIDEO_PixelFormatRGB565,
-        .bytesPerPixel = _CAMERA_PIXEL_SIZE,
-        .resolution = FSL_VIDEO_RESOLUTION(_CAMERA_WIDTH, _CAMERA_HEIGHT),
-        .frameBufferLinePitch_Bytes = _CAMERA_WIDTH * _CAMERA_PIXEL_SIZE,
-        .interface = kCAMERA_InterfaceGatedClock,
-        .controlFlags = (kCAMERA_HrefActiveHigh | kCAMERA_DataLatchOnRisingEdge),
-        .framePerSec = 30,
-    };
-
-    _csi_init_clock();
-
     rt_hw_interrupt_install(_s_ov2640.irqno, _csi_int_isr, RT_NULL, _s_ov2640.name);
     rt_hw_interrupt_umask(_s_ov2640.irqno);
 
-    CAMERA_RECEIVER_Init(&cameraReceiver, &cameraConfig, NULL, NULL);
+    CAMERA_RECEIVER_Init(&_s_camera_receiver, &_s_camera_config, NULL, NULL);
 
-    /* Submit the empty frame buffers to buffer queue. */
     for (int i = 0; i < _CAMERA_FRAME_COUNT; i++)
     {
-        uint32_t paddr = mem_map_v2p((uint32_t)(s_frameBuffer[i]));
-        CAMERA_RECEIVER_SubmitEmptyBuffer(&cameraReceiver, paddr);
+        uint32_t paddr = mem_map_v2p((uint32_t)(_s_frame_buf[i]));
+        CAMERA_RECEIVER_SubmitEmptyBuffer(&_s_camera_receiver, paddr);
     }
 
-    CAMERA_RECEIVER_Start(&cameraReceiver);
-    LOG_D("camera start.");
+    CAMERA_RECEIVER_Start(&_s_camera_receiver);
 
-    while (1)
+    _s_ov2640.flag = 1;
+}
+
+static void _set_output_mode( rt_device_t i2cdev, eCameraOutputMode mode )
+{
+    int i;
+
+    switch (mode)
     {
-        uint32_t activeFrameAddr = 0;
-        while ( kStatus_Success != CAMERA_RECEIVER_GetFullBuffer(&cameraReceiver, &activeFrameAddr) );
-
-        if (activeFrameAddr)
-        {
-            activeFrameAddr = mem_map_p2v(activeFrameAddr);
-
-            extern struct skt_lcd_info _g_lcd_info;
-            extern void lcd_fill(uint32_t*, uint32_t*, uint32_t);
-
-            uint32_t total = _CAMERA_HEIGHT * _CAMERA_WIDTH;
-            uint32_t *tgt = (uint32_t*)(_g_lcd_info.fb_virt);
-            uint8_t *src = (uint8_t*)(activeFrameAddr);
-
-            for (uint32_t i=0; i<total; i++)
-            {
-                uint16_t data = (src[2*i+1]<<8) | src[2*i+0];
-
-                uint8_t r = (data & 0xF800) >> 8;
-                uint8_t g = (data & 0x07E0) >> 3;
-                uint8_t b = (data & 0x001F) << 3;
-
-                tgt[i] = (r<<16) | (g<<8) | (b);
+        case eOutputMode_Jpeg:
+            for (i=0; i<GET_ARRAY_NUM(_OV2640_JPEG_TBL); i++) {
+                _write_one_data(i2cdev, _OV2640_JPEG_TBL[i][0], _OV2640_JPEG_TBL[i][1]);
             }
+            break;
 
-//            rt_thread_mdelay(100);
+        case eOutputMode_Rgb565:
+            for (i=0; i<GET_ARRAY_NUM(_OV2640_RGB565_TBL); i++) {
+                _write_one_data(i2cdev, _OV2640_RGB565_TBL[i][0], _OV2640_RGB565_TBL[i][1]);
+            }
+            break;
 
-            CAMERA_RECEIVER_SubmitEmptyBuffer(&cameraReceiver, mem_map_v2p(activeFrameAddr));
-        }
+        case eOutputMode_Yuv422:
+            for (i=0; i<GET_ARRAY_NUM(_OV2640_YUV422_TBL); i++) {
+                _write_one_data(i2cdev, _OV2640_YUV422_TBL[i][0], _OV2640_YUV422_TBL[i][1]);
+            }
+            break;
+
+        default:
+            break;
     }
 }
 
-static void _set_mode_rgb565( rt_device_t i2cdev )
+static void _set_light_mode( rt_device_t i2cdev, eCameraLightMode mode )
 {
-    for (int i=0; i<GET_ARRAY_NUM(_OV2640_RGB565_TBL); i++) {
-        _write_one_data(i2cdev, _OV2640_RGB565_TBL[i][0], _OV2640_RGB565_TBL[i][1]);
-    }
-}
+    uint8_t regVal[3];
 
-static void _set_light_mode( rt_device_t i2cdev, _LightEnum mode )
-{
-    uint8_t reg_cc_val = 0x5E;
-    uint8_t reg_cd_val = 0x41;
-    uint8_t reg_ce_val = 0x54;
+    if (mode >= eLightMode_MaxNum) {
+        return;
+    }
 
     switch(mode)
     { 
-        case LIGHT_AUTO:
-            _write_one_data(i2cdev, 0xFF, 0x00);
-            _write_one_data(i2cdev, 0xC7, 0x10); //AWB ON
+        case eLightMode_Auto:
+            regVal[0] = 0x5E;
+            regVal[1] = 0x41;
+            regVal[2] = 0x54;
             break;
 
-        case LIGHT_CLOUDY:
-            reg_cc_val = 0x65;
-            reg_cd_val = 0x41;
-            reg_ce_val = 0x4F;
-            break;	
+        case eLightMode_Cloudy:
+            regVal[0] = 0x65;
+            regVal[1] = 0x41;
+            regVal[2] = 0x4F;
+            break;
 
-        case LIGHT_OFFICE:
-            reg_cc_val = 0x52;
-            reg_cd_val = 0x41;
-            reg_ce_val = 0x66;
-            break;	
+        case eLightMode_Office:
+            regVal[0] = 0x52;
+            regVal[1] = 0x41;
+            regVal[2] = 0x66;
+            break;
 
-        case 4://home
-            reg_cc_val = 0x42;
-            reg_cd_val = 0x3F;
-            reg_ce_val = 0x71;
+        case eLightMode_Home:
+            regVal[0] = 0x42;
+            regVal[1] = 0x3F;
+            regVal[2] = 0x71;
             break;
 
         default:
             break;
     }
 
-    _write_one_data(i2cdev, 0xFF, 0X00);
-    _write_one_data(i2cdev, 0xC7, 0X40); //AWB OFF
-    _write_one_data(i2cdev, 0xCC, reg_cc_val);
-    _write_one_data(i2cdev, 0xCD, reg_cd_val);
-    _write_one_data(i2cdev, 0xCE, reg_ce_val);
+    _write_one_data(i2cdev, 0xFF, 0x00);
+    if (eLightMode_Auto == mode)
+    {
+        _write_one_data(i2cdev, 0xC7, 0x10); //AWB ON
+    } else {
+        _write_one_data(i2cdev, 0xC7, 0x40); //AWB OFF
+    }
+    _write_one_data(i2cdev, 0xCC, regVal[0]);
+    _write_one_data(i2cdev, 0xCD, regVal[1]);
+    _write_one_data(i2cdev, 0xCE, regVal[2]);
 }
 
-static void _set_out_image_size( rt_device_t i2cdev, uint16_t width, uint16_t height )
+static void _set_output_image_size( rt_device_t i2cdev, uint16_t width, uint16_t height )
 {
-    uint16_t outh = 0;
-    uint16_t outw = 0;
-    uint8_t temp = 0; 
+    uint16_t outh, outw;
+    uint8_t dummy;
 
-    if ( (width%4) || (height%4) ) {
+    if ( (width % 4) || (height % 4) ) {
         return;
     }
 
@@ -292,12 +296,15 @@ static void _set_out_image_size( rt_device_t i2cdev, uint16_t width, uint16_t he
 
     _write_one_data(i2cdev, 0xFF, 0x00);
     _write_one_data(i2cdev, 0xE0, 0x04);
-    _write_one_data(i2cdev, 0x5A, outw&0XFF);
-    _write_one_data(i2cdev, 0x5B, outh&0XFF);
-    temp  =(outw>>8)&0x03;
-    temp |=(outh>>6)&0x04;
-    _write_one_data(i2cdev, 0x5C, temp);
-    _write_one_data(i2cdev, 0xE0,0x00);
+
+    _write_one_data(i2cdev, 0x5A, outw&0xFF);
+    _write_one_data(i2cdev, 0x5B, outh&0xFF);
+
+    dummy  = (outw >> 8) & 0x03;
+    dummy |= (outh >> 6) & 0x04;
+
+    _write_one_data(i2cdev, 0x5C, dummy);
+    _write_one_data(i2cdev, 0xE0, 0x00);
 }
 
 static void _ov2640_device_init( rt_device_t i2cdev )
@@ -321,9 +328,9 @@ static void _ov2640_device_init( rt_device_t i2cdev )
         _write_one_data(i2cdev, _OV2640_INIT_REG_TBL[i][0], _OV2640_INIT_REG_TBL[i][1]);
     }
 
-    _set_mode_rgb565(i2cdev);
-    _set_light_mode(i2cdev, LIGHT_AUTO);
-    _set_out_image_size(i2cdev, _CAMERA_WIDTH, _CAMERA_HEIGHT);
+    _set_output_mode(i2cdev, eOutputMode_Rgb565);
+    _set_light_mode(i2cdev, eLightMode_Auto);
+    _set_output_image_size(i2cdev, _CAMERA_WIDTH, _CAMERA_HEIGHT);
 }
 
 static rt_err_t _ov2640_ops_open( rt_device_t dev,
@@ -350,7 +357,10 @@ static rt_err_t _ov2640_ops_open( rt_device_t dev,
     dev->user_data = i2c_bus;
 
     _csi_gpio_init();
+
     _ov2640_device_init(dev->user_data);
+
+    _csi_init_clock();
     _csi_device_init();
 
     return RT_EOK;
@@ -415,7 +425,7 @@ int rt_hw_ov2640_init(void)
     device->user_data = RT_NULL;
 
     _s_ov2640.periph.vaddr = platform_get_periph_vaddr(_s_ov2640.periph.paddr);
-    csiResource.csiBase = (CSI_Type*)_s_ov2640.periph.vaddr;
+    csi_resource.csiBase = (CSI_Type*)_s_ov2640.periph.vaddr;
 
     _s_ov2640.flag = 0; //wait for enet init!
 
@@ -425,9 +435,12 @@ int rt_hw_ov2640_init(void)
 }
 INIT_COMPONENT_EXPORT(rt_hw_ov2640_init);
 
-int ov2640(int argc, char **argv)
+#if defined(CAMERA_DEBUG_EN) && (CAMERA_DEBUG_EN)
+int camera(int argc, char **argv)
 {
     rt_device_t ovdev = RT_NULL;
+    uint32_t *tgtAddr = RT_NULL;
+    uint8_t *srcAddr = RT_NULL;
 
     ovdev = rt_device_find("ov2640");
     if (RT_NULL == ovdev)
@@ -438,13 +451,40 @@ int ov2640(int argc, char **argv)
 
     rt_device_open(ovdev, RT_DEVICE_FLAG_RDWR);
 
-    //you can do something here.
+    tgtAddr = (uint32_t*)_g_lcd_info.fb_virt;
+
+    LOG_RAW("wait and display an image from camera.\n");
+    LOG_RAW("you can quit only by hardware reset!\n");
+
+    while (1)
+    {
+        uint32_t activeFrameAddr = 0;
+        while ( kStatus_Success != CAMERA_RECEIVER_GetFullBuffer(&_s_camera_receiver, &activeFrameAddr) );
+
+        srcAddr = (uint8_t*)mem_map_p2v(activeFrameAddr);
+
+        for (uint32_t i=0; i<(_CAMERA_HEIGHT*_CAMERA_WIDTH); i++)
+        {
+            uint16_t rgb565 = (srcAddr[2*i+1]<<8) | srcAddr[2*i+0];
+
+            lcd_color32_t rgb24;
+            rgb24.ch.red = (rgb565 & 0xF800) >> 8;
+            rgb24.ch.green = (rgb565 & 0x07E0) >> 3;
+            rgb24.ch.blue = (rgb565 & 0x001F) << 3;
+            rgb24.ch.alpha = 0;
+
+            tgtAddr[i] = rgb24.full;
+        }
+
+        CAMERA_RECEIVER_SubmitEmptyBuffer(&_s_camera_receiver, mem_map_v2p(activeFrameAddr));
+    }
 
     rt_device_close(ovdev);
 
     return 0;
 }
-MSH_CMD_EXPORT_ALIAS(ov2640, ov2640, <usr> ov2640 test);
+MSH_CMD_EXPORT_ALIAS(camera, camera, <usr> camera capture test);
+#endif //#if defined(CAMERA_DEBUG_EN) && (CAMERA_DEBUG_EN)
 
 #endif //#ifdef RT_USING_OV2640
 
