@@ -21,28 +21,28 @@
 
 #include "__def.h"
 #include "realview.h"
-#include "drv_i2c.h"
-#include "drv_pin.h"
-#include "drv_ov2640.h"
 #include "bsp_lcdapi.h"
+#include "drv_pin.h"
+#include "drv_i2c.h"
+#include "drv_ov2640.h"
 #include "skt.h"
 
 #define DBG_TAG "drv.ov2640"
 #define DBG_LVL DBG_LOG
 #include <rtdbg.h>
 
+/* set this to 1 to enable camera test demo. */
+#define _CAMERA_DEBUG_EN        1
+
 #define _DEVICE_NAME            "ov2640"
 #define _BUS_NAME               "i2c2"
 
-/* set this to 1 to enable camera test demo. */
-#define CAMERA_DEBUG_EN 1
+#define _BUS_I2C_ADDR           0x30
 
 #define _CAMERA_WIDTH           BSP_LCD_WIDTH
 #define _CAMERA_HEIGHT          BSP_LCD_HEIGHT
 #define _CAMERA_PIXEL_SIZE      2
 #define _CAMERA_FRAME_COUNT     2
-
-#define _BUS_I2C_ADDR           0x30
 
 #define _OV2640_DELAY_US(t)     rt_hw_us_delay(t)
 #define _OV2640_DELAY_MS(t)     rt_hw_ms_delay(t)
@@ -64,7 +64,7 @@
 #define OV2640_SENSOR_PIDL      0x0B
 
 _internal_rw struct skt_cameradev _s_ov2640 = {
-    .name = "ov2640",
+    .name = _DEVICE_NAME,
     .periph.paddr = REALVIEW_CSI_BASE,
     .irqno = CSI_IRQn,
     .gpio = {
@@ -108,33 +108,16 @@ _internal_rw camera_config_t _s_camera_config = {
 _internal_rw AT_NONCACHEABLE_SECTION_ALIGN( uint16_t _s_frame_buf[_CAMERA_FRAME_COUNT][_CAMERA_HEIGHT][_CAMERA_WIDTH],
                                         64 );
 
-static void _write_data( rt_device_t i2cdev, rt_uint16_t reg, rt_uint8_t *data, rt_uint16_t len )
-{
-    rt_uint8_t bus_addr = _BUS_I2C_ADDR;
-
-    rt_device_control(i2cdev, RT_I2C_DEV_CTRL_ADDR, &bus_addr);
-    rt_device_write(i2cdev, reg, data, len);
-}
-
-static void _read_data( rt_device_t i2cdev, rt_uint16_t reg, rt_uint8_t *data, rt_uint16_t len )
-{
-    rt_uint8_t bus_addr = _BUS_I2C_ADDR;
-
-    rt_device_control(i2cdev, RT_I2C_DEV_CTRL_ADDR, &bus_addr);
-    rt_device_read(i2cdev, reg, data, len);
-}
-
 static void _write_one_data( rt_device_t i2cdev, rt_uint16_t reg, rt_uint8_t data )
 {
-    _write_data(i2cdev, reg, &data, 1);
+    struct rt_i2c_bus_device *bus = (struct rt_i2c_bus_device*)i2cdev;
+    i2c_write_one_data(bus, _BUS_I2C_ADDR, reg, 1, data);
 }
 
 static rt_uint8_t _read_one_data( rt_device_t i2cdev, rt_uint16_t reg )
 {
-    rt_uint8_t data;
-
-    _read_data(i2cdev, reg, &data, 1);
-    return data;
+    struct rt_i2c_bus_device *bus = (struct rt_i2c_bus_device*)i2cdev;
+    return i2c_read_one_data(bus, _BUS_I2C_ADDR, reg, 1);
 }
 
 static rt_uint16_t _get_verison( rt_device_t i2cdev )
@@ -409,7 +392,6 @@ int rt_hw_ov2640_init(void)
     device = &_s_ov2640.parent;
 
     device->type    = RT_Device_Class_Sensor;
-
 #ifdef RT_USING_DEVICE_OPS
     device->ops     = &_k_ov2640_ops;
 #else
@@ -420,7 +402,6 @@ int rt_hw_ov2640_init(void)
     device->write   = RT_NULL;
     device->control = _ov2640_ops_control;
 #endif
-
     device->user_data = RT_NULL;
 
     _s_ov2640.periph.vaddr = platform_get_periph_vaddr(_s_ov2640.periph.paddr);
@@ -434,21 +415,21 @@ int rt_hw_ov2640_init(void)
 }
 INIT_COMPONENT_EXPORT(rt_hw_ov2640_init);
 
-#if defined(CAMERA_DEBUG_EN) && (CAMERA_DEBUG_EN)
-int camera(int argc, char **argv)
+#if defined(_CAMERA_DEBUG_EN) && (_CAMERA_DEBUG_EN)
+int ov2640(int argc, char **argv)
 {
-    rt_device_t ovdev = RT_NULL;
+    rt_device_t device = RT_NULL;
     uint32_t *tgtAddr = RT_NULL;
     uint8_t *srcAddr = RT_NULL;
 
-    ovdev = rt_device_find("ov2640");
-    if (RT_NULL == ovdev)
+    device = rt_device_find(_DEVICE_NAME);
+    if (RT_NULL == device)
     {
-        LOG_RAW("not find device [%s].\n", "ov2640");
+        LOG_RAW("not find device [%s].\n", _DEVICE_NAME);
         return -1;
     }
 
-    rt_device_open(ovdev, RT_DEVICE_FLAG_RDWR);
+    rt_device_open(device, RT_DEVICE_FLAG_RDWR);
 
     tgtAddr = (uint32_t*)_g_lcd_info.fb_virt;
 
@@ -478,12 +459,12 @@ int camera(int argc, char **argv)
         CAMERA_RECEIVER_SubmitEmptyBuffer(&_s_camera_receiver, mem_map_v2p(activeFrameAddr));
     }
 
-    rt_device_close(ovdev);
+    rt_device_close(device);
 
     return 0;
 }
-MSH_CMD_EXPORT_ALIAS(camera, camera, <usr> camera capture test);
-#endif //#if defined(CAMERA_DEBUG_EN) && (CAMERA_DEBUG_EN)
+MSH_CMD_EXPORT_ALIAS(ov2640, ov2640, <usr> ov2640 device test);
+#endif //#if defined(_CAMERA_DEBUG_EN) && (_CAMERA_DEBUG_EN)
 
 #endif //#ifdef RT_USING_OV2640
 

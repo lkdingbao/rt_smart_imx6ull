@@ -287,6 +287,11 @@
 
 /* Platform Device Configuration */
 
+#define RT_USING_GT9147
+#define BSP_TOUCH_POINT_NUM 5
+#define RT_USING_PCF8574
+#define BSP_PCF_COL_NUM 16
+#define BSP_PCF_ROW_NUM 2
 #define RT_USING_CAMERA
 #define RT_USING_OV2640
 

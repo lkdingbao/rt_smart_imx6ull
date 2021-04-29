@@ -6,7 +6,7 @@ list = os.listdir(cwd)
 CPPPATH = [cwd]
 objs = []
 
-if not GetDepend('RT_USING_GT7147'):
+if not GetDepend('RT_USING_GT9147'):
     SrcRemove(src, ['drv_gt9147.c'])
 
 if not GetDepend('RT_USING_PCF8574'):

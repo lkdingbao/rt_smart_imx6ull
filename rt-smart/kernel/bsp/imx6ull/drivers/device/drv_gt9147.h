@@ -12,7 +12,7 @@
 
 #include "skt.h"
 
-#ifdef RT_USING_GT7147
+#ifdef RT_USING_GT9147
 
 #define GT_CTRL_REG             0X8040  /* Ctrl Register                */
 #define GT_MODSW_REG            0X804D  /* Mode Switch Register         */
@@ -30,7 +30,8 @@
 #define GT_FLAG_NEW_DATA        (1 << 0)
 
 extern rt_uint8_t _g_gt9147_flag;
+extern struct skt_touch_data _g_touch_data;
 
-#endif //#ifdef RT_USING_GT7147
+#endif //#ifdef RT_USING_GT9147
 #endif //#ifndef __DRV_GT9147_H__
 

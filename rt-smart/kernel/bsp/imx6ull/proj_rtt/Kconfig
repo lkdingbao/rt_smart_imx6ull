@@ -63,12 +63,6 @@ config RT_FUNC_SELF_TEST
     default y
 
     if RT_FUNC_SELF_TEST
-        config RT_FUNC_SELF_TEST_I2C_DEV
-            bool "Enable I2C device test code"
-            default n
-        config RT_FUNC_SELF_TEST_SPI_DEV
-            bool "Enable SPI device test code"
-            default n
         config RT_FUNC_SELF_TEST_PIN_DEV
             bool "Enable PIN device test code"
             default n

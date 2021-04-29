@@ -1,11 +1,11 @@
 menu "Platform Device Configuration"
 
-config RT_USING_GT7147
+config RT_USING_GT9147
     bool "Enable GT9147"
     select RT_USING_I2C
     default y
 
-    if RT_USING_GT7147
+    if RT_USING_GT9147
         config BSP_TOUCH_POINT_NUM
             int "Number of touch point"
             default 5
@@ -15,6 +15,15 @@ config RT_USING_PCF8574
     bool "Enable PCF8574"
     select RT_USING_I2C
     default y
+
+    if RT_USING_PCF8574
+        config BSP_PCF_COL_NUM
+            int "Number of column per row"
+            default 16
+        config BSP_PCF_ROW_NUM
+            int "Number of row per column"
+            default 2
+    endif
 
 menuconfig RT_USING_ENET
     bool "Select Enet Device"

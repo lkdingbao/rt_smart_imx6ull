@@ -774,41 +774,6 @@ status_t I2C_MasterTransferBlocking(I2C_Type *base, i2c_master_transfer_t *xfer)
             }
 
         } while ((xfer->subaddressSize > 0) && (result == kStatus_Success));
-
-        if (xfer->direction == kI2C_Read)
-        {
-            /* Clear pending flag. */
-            base->I2SR &= (uint8_t)~kI2C_IntPendingFlag;
-
-            /* Send repeated start and slave address. */
-            result = I2C_MasterRepeatedStart(base, xfer->slaveAddress, kI2C_Read);
-
-            /* Return if error. */
-            if (result)
-            {
-                return result;
-            }
-
-            /* Wait until data transfer complete. */
-            while (!(base->I2SR & kI2C_IntPendingFlag))
-            {
-            }
-
-            /* Check if there's transfer error. */
-            result = I2C_CheckAndClearError(base, base->I2SR);
-
-            if (result)
-            {
-                if (result == kStatus_I2C_Nak)
-                {
-                    result = kStatus_I2C_Addr_Nak;
-
-                    I2C_MasterStop(base);
-                }
-
-                return result;
-            }
-        }
     }
 
     /* Transmit data. */
