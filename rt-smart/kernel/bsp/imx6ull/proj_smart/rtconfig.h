@@ -114,9 +114,9 @@
 #define RT_SYSTEM_WORKQUEUE_PRIORITY 23
 #define RT_USING_SERIAL
 #define RT_SERIAL_RB_BUFSZ 64
+#define RT_USING_CAN
 #define RT_USING_I2C
 #define RT_USING_PIN
-#define RT_USING_MTD_NAND
 #define RT_USING_RTC
 #define RT_USING_SDIO
 #define RT_SDIO_STACK_SIZE 512
@@ -274,11 +274,17 @@
 
 #define BSP_USING_I2C2
 
+/* Select CAN Driver */
+
+#define RT_USING_FLEXCAN1
+
 /* Select LCD Driver */
 
-#define RT_USING_RGBLCD
+#define BSP_USING_RGBLCD
 #define BSP_LCD_WIDTH 800
 #define BSP_LCD_HEIGHT 480
+#define BSP_LCD_CONSOLE_DEBUG
+#define BSP_LCD_CONSOLE_PARSER
 
 /* Select SD Card Driver */
 
@@ -290,10 +296,13 @@
 
 /* Select NAND Flash Driver */
 
-
 /* Platform Device Configuration */
 
-#define RT_USING_ENET
+#define RT_USING_GT9147
+#define BSP_TOUCH_POINT_NUM 5
+#define RT_USING_PCF8574
+#define BSP_PCF_COL_NUM 16
+#define BSP_PCF_ROW_NUM 2
 #define RT_USING_CAMERA
 #define RT_USING_OV2640
 

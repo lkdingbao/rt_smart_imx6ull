@@ -189,6 +189,11 @@ struct skt_can
     //[0]-tx [1]-rx
     struct skt_gpio             gpio[2];
 
+    rt_uint16_t                 rx_mb_id;
+
+    rt_uint8_t                  tx_mb_idx;
+    rt_uint8_t                  rx_mb_idx;
+
     rt_uint32_t                 flag;
 };
 
