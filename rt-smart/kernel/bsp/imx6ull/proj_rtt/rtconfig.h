@@ -106,8 +106,10 @@
 #define RT_SYSTEM_WORKQUEUE_PRIORITY 23
 #define RT_USING_SERIAL
 #define RT_SERIAL_RB_BUFSZ 64
+#define RT_USING_CAN
 #define RT_USING_I2C
 #define RT_USING_PIN
+#define RT_USING_RTC
 #define RT_USING_SDIO
 #define RT_SDIO_STACK_SIZE 512
 #define RT_SDIO_THREAD_PRIORITY 15
@@ -261,9 +263,13 @@
 
 #define BSP_USING_I2C2
 
+/* Select CAN Driver */
+
+#define RT_USING_FLEXCAN1
+
 /* Select LCD Driver */
 
-#define RT_USING_RGBLCD
+#define BSP_USING_RGBLCD
 #define BSP_LCD_WIDTH 800
 #define BSP_LCD_HEIGHT 480
 #define BSP_LCD_CONSOLE_DEBUG
@@ -274,6 +280,8 @@
 #define BSP_USING_SDHC
 
 /* Select RTC Driver */
+
+#define BSP_USING_ONCHIP_RTC
 
 /* Select NAND Flash Driver */
 

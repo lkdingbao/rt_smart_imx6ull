@@ -11,7 +11,7 @@
 #include <rthw.h>
 #include <rtdevice.h>
 
-#ifdef RT_USING_RGBLCD
+#ifdef BSP_USING_RGBLCD
 
 #include <board.h>
 #ifdef RT_USING_LWP
@@ -595,5 +595,5 @@ int rt_hw_lcd_disp_init(void)
 }
 INIT_DEVICE_EXPORT(rt_hw_lcd_disp_init);
 
-#endif //#ifdef RT_USING_RGBLCD
+#endif //#ifdef BSP_USING_RGBLCD
 

@@ -92,7 +92,7 @@ static void _nand_show_info( struct nand_attribute *info )
 }
 #endif //#if defined(NAND_FLASH_SHOW_INFO) && (NAND_FLASH_SHOW_INFO)
 
-static rt_err_t nand_init_clock( struct skt_nanddev *nanddev )
+static void _nand_clock_init( struct skt_nanddev *nanddev )
 {
     RT_ASSERT(RT_NULL != nanddev);
 
@@ -119,8 +119,6 @@ static rt_err_t nand_init_clock( struct skt_nanddev *nanddev )
     CLOCK_EnableClock(kCLOCK_RawNandBchApb);
     CLOCK_EnableClock(kCLOCK_RawNandGpmiApb);
     CLOCK_EnableClock(kCLOCK_Apbhdma);
-
-    return RT_EOK;
 }
 
 static int nand_init( struct skt_nanddev *nanddev )
@@ -313,8 +311,6 @@ static rt_err_t _nand_device_init( struct skt_nanddev *nanddev )
 {
     RT_ASSERT(RT_NULL != nanddev);
 
-    nand_init_clock(nanddev);
-
     if (RT_EOK != nand_init(nanddev))
     {
         LOG_W("nand flash init failed.");
@@ -478,6 +474,7 @@ int rt_hw_nand_init(void)
     _s_nand.flag = 0; //wait for nand init!
 
     _nand_gpio_init(&_s_nand);
+    _nand_clock_init(&_s_nand);
     _nand_device_init(&_s_nand);
 
     return RT_EOK;

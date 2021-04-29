@@ -178,6 +178,20 @@ struct skt_touch_data
 #endif
 };
 
+struct skt_can
+{
+    struct rt_device            parent;
+
+    const char                  *name;
+    struct skt_periph           periph;
+    rt_uint32_t                 irqno;
+
+    //[0]-tx [1]-rx
+    struct skt_gpio             gpio[2];
+
+    rt_uint32_t                 flag;
+};
+
 #ifdef cplusplus
 }
 #endif

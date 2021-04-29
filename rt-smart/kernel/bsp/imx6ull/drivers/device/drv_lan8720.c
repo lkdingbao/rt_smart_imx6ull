@@ -83,7 +83,7 @@ _internal_rw struct skt_netdev _s_lan8720_device = {
 _internal_rw rt_thread_t _s_phy_monitor_tid = RT_NULL;
 #endif
 
-static rt_err_t enet_init_clock( void )
+static void enet_clock_init( void )
 {
     _internal_ro clock_enet_pll_config_t config = {
         false,      /* enableClkOutput0 */
@@ -96,8 +96,6 @@ static rt_err_t enet_init_clock( void )
 
     CLOCK_InitEnetPll(&config);
     CLOCK_EnableClock(kCLOCK_Enet);
-
-    return RT_EOK;
 }
 
 static void _enet_rx_callback( struct skt_netdev *netdev )
@@ -285,7 +283,7 @@ static rt_err_t _lan8720_device_init( struct skt_netdev *netdev )
 
     enet = (ENET_Type*)netdev->periph.vaddr;
 
-    enet_init_clock();
+    enet_clock_init();
 
     ENET_GetDefaultConfig(&config);
     config.macSpecialConfig = kENET_ControlMacAddrInsert;

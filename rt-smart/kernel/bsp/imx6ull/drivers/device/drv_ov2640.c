@@ -158,14 +158,13 @@ static void _csi_int_isr( int irqno, void* parameter )
     CSI_DriverIRQHandler();
 }
 
-static rt_err_t _csi_init_clock( void )
+static void _csi_clock_init( void )
 {
     /* CSI MCLK select 24M. */
     CLOCK_SetMux(kCLOCK_CsiMux, 0);
     CLOCK_SetDiv(kCLOCK_CsiDiv, 0);
-    CLOCK_EnableClock(kCLOCK_CsiMclk);
 
-    return RT_EOK;
+    CLOCK_EnableClock(kCLOCK_CsiMclk);
 }
 
 static void _csi_gpio_init( void )
@@ -360,7 +359,7 @@ static rt_err_t _ov2640_ops_open( rt_device_t dev,
 
     _ov2640_device_init(dev->user_data);
 
-    _csi_init_clock();
+    _csi_clock_init();
     _csi_device_init();
 
     return RT_EOK;

@@ -30,6 +30,7 @@
 #include "fsl_camera.h"
 #include "fsl_camera_receiver.h"
 #include "fsl_csi_camera_adapter.h"
+#include "fsl_flexcan.h"
 
 #endif //#ifndef __IMX6ULL_COMMON_H__
 

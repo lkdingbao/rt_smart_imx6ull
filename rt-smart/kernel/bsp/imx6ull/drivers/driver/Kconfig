@@ -63,12 +63,24 @@ menu "Select I2C Driver"
     endif
 endmenu
 
+
+menu "Select CAN Driver"
+    if RT_USING_CAN
+        config RT_USING_FLEXCAN1
+            bool "Enable FLEXCAN1"
+            default y
+        config RT_USING_FLEXCAN2
+            bool "Enable FLEXCAN2"
+            default n
+    endif
+endmenu
+
 menu "Select LCD Driver"
-config RT_USING_RGBLCD
+config BSP_USING_RGBLCD
     bool "Enable RGBLCD"
     default y
 
-    if RT_USING_RGBLCD
+    if BSP_USING_RGBLCD
         config BSP_LCD_WIDTH
             int "Width of LCD panel"
             default 800

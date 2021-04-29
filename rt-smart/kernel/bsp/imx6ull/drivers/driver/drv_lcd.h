@@ -13,7 +13,7 @@
 #include "rt_lcd.h"
 #include "skt.h"
 
-#ifdef RT_USING_RGBLCD
+#ifdef BSP_USING_RGBLCD
 
 #define RGB_COLOR_BLUE                      0x000000FF
 #define RGB_COLOR_GREEN                     0x0000FF00
@@ -43,6 +43,6 @@
 #define RGB_COLOR_TRANSPARENT               0x00000000
 #define RGB_COLOR_PURPLE                    0x00800080
 
-#endif //#ifdef RT_USING_RGBLCD
+#endif //#ifdef BSP_USING_RGBLCD
 #endif //#ifndef __DRV_LCD_H__
 

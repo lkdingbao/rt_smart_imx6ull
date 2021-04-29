@@ -90,6 +90,9 @@
 
 #define REALVIEW_CSI_BASE           CSI_BASE
 
+#define REALVIEW_CAN1_BASE          CAN1_BASE
+#define REALVIEW_CAN2_BASE          CAN2_BASE
+
 #include <rtdef.h>
 //#include <armv7.h>
 

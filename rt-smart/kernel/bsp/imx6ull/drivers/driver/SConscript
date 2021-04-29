@@ -15,7 +15,10 @@ if not GetDepend('RT_USING_SPI'):
 if not GetDepend('RT_USING_I2C'):
     SrcRemove(src, ['drv_i2c.c'])
 
-if not GetDepend('RT_USING_RGBLCD'):
+if not GetDepend('RT_USING_CAN'):
+    SrcRemove(src, ['drv_can.c'])
+
+if not GetDepend('BSP_USING_RGBLCD'):
     SrcRemove(src, ['drv_lcd.c'])
 
 if not GetDepend('BSP_USING_SDHC'):
