@@ -1,7 +1,7 @@
 menu "Platform Device Configuration"
 
-config RT_USING_GT9147
-    bool "Enable GT9147"
+menuconfig RT_USING_GT9147
+    bool "Enable GT9147 device"
     select RT_USING_I2C
     default y
 
@@ -11,8 +11,8 @@ config RT_USING_GT9147
             default 5
     endif
 
-config RT_USING_PCF8574
-    bool "Enable PCF8574"
+menuconfig RT_USING_PCF8574
+    bool "Enable PCF8574 device"
     select RT_USING_I2C
     default y
 
@@ -25,8 +25,35 @@ config RT_USING_PCF8574
             default 2
     endif
 
+menuconfig RT_USING_DS1307
+    bool "Enable DS1307 device"
+    select RT_USING_I2C
+    default y
+
+menuconfig RT_USING_MPU6050
+    bool "Enable MPU6050 device"
+    select RT_USING_I2C
+    default y
+
+menuconfig RT_USING_EEPROM
+    bool "Enable EEPROM device"
+    select RT_USING_I2C
+    default y
+    
+    if RT_USING_EEPROM
+        config BSP_EEPROM_DOUBLE_BAK_EN
+            bool "Enable double backup"
+            default n
+        config BSP_EEPROM_SIZE
+            int "Total size of eeprom"
+            default 4096
+        config BSP_EEPROM_PAGE_SIZE
+            int "Page size of eeprom"
+            default 32
+    endif
+
 menuconfig RT_USING_ENET
-    bool "Select Enet Device"
+    bool "Enable Ethernet device"
     default y
 
     if RT_USING_ENET
@@ -36,7 +63,7 @@ menuconfig RT_USING_ENET
     endif
 
 menuconfig RT_USING_CAMERA
-    bool "Select Camera Device"
+    bool "Enable Camera device"
     default y
 
     if RT_USING_CAMERA

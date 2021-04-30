@@ -55,10 +55,6 @@ static rt_err_t _set_rtc_time_stamp(time_t time_stamp)
     struct tm *p_tm;
 
     p_tm = localtime(&time_stamp);
-    if (p_tm->tm_year < 100)
-    {
-        return -RT_ERROR;
-    }
 
     rtcDate.second = p_tm->tm_sec;
     rtcDate.minute = p_tm->tm_min;

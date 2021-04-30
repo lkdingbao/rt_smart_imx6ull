@@ -30,14 +30,14 @@
 #define DBG_LVL DBG_LOG
 #include <rtdbg.h>
 
-/* set this to 1 to enable touch test demo. */
-#define _TOUCH_DEBUG_EN         1
+/* set this to 1 to enable device test demo. */
+#define _DEVICE_DEBUG_EN        1
 
 #define _DEVICE_NAME            "gt9147"
 #define _BUS_NAME               "i2c2"
 
 /* i2c addr can sel 0x14 or 0x5D with setting INT_PIN timing */
-#define _BUS_I2C_ADDR           0x14
+#define _BUS_I2C_ADDR           (0x14)
 
 /* GT9174 only support 5 touch points! */
 #define _TOUCH_POINT_NUM        BSP_TOUCH_POINT_NUM
@@ -129,7 +129,7 @@ static void _read_data( rt_device_t i2cdev, rt_uint16_t reg, rt_uint8_t *buf, rt
     i2c_read_data(bus, _BUS_I2C_ADDR, dummy, 2, buf, len);
 }
 
-void _write_one_data( rt_device_t i2cdev, rt_uint16_t reg, rt_uint8_t data )
+static void _write_one_data( rt_device_t i2cdev, rt_uint16_t reg, rt_uint8_t data )
 {
     _write_data(i2cdev, reg, &data, 1);
 }
@@ -364,6 +364,7 @@ static rt_size_t _gt9147_ops_read( rt_device_t dev,
 {
     struct rt_i2c_bus_device *bus = RT_NULL;
     struct skt_touch_data *pdata = RT_NULL;
+    rt_size_t len;
 
     RT_ASSERT(RT_NULL != dev);
     RT_ASSERT(RT_NULL != dev->user_data);
@@ -376,11 +377,15 @@ static rt_size_t _gt9147_ops_read( rt_device_t dev,
     _get_touchdata((rt_device_t)bus);
     if (_s_gt9147_tpdata.flag & GT_FLAG_NEW_DATA) 
     {
-        rt_memcpy(pdata, &_s_gt9147_tpdata, sizeof(struct skt_touch_data));
+        len = sizeof(struct skt_touch_data);
+        rt_memcpy(pdata, &_s_gt9147_tpdata, len);
+
         _s_gt9147_tpdata.flag &= ~GT_FLAG_NEW_DATA; //read first, clear after!
+    } else {
+        len = 0;
     }
 
-    return RT_EOK;
+    return len;
 }
 
 #ifdef RT_USING_DEVICE_OPS
@@ -424,7 +429,7 @@ int rt_hw_gt9147_init(void)
 }
 INIT_COMPONENT_EXPORT(rt_hw_gt9147_init);
 
-#if defined(_TOUCH_DEBUG_EN) && (_TOUCH_DEBUG_EN)
+#if defined(_DEVICE_DEBUG_EN) && (_DEVICE_DEBUG_EN)
 int gt9147(int argc, char **argv)
 {
     rt_device_t device = RT_NULL;
@@ -456,7 +461,7 @@ int gt9147(int argc, char **argv)
     return 0;
 }
 MSH_CMD_EXPORT_ALIAS(gt9147, gt9147, <usr> gt9147 device test);
-#endif //#if defined(_TOUCH_DEBUG_EN) && (_TOUCH_DEBUG_EN)
+#endif //#if defined(_DEVICE_DEBUG_EN) && (_DEVICE_DEBUG_EN)
 
 #endif //#ifdef RT_USING_GT9147
 

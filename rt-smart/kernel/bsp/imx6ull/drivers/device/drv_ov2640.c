@@ -31,13 +31,13 @@
 #define DBG_LVL DBG_LOG
 #include <rtdbg.h>
 
-/* set this to 1 to enable camera test demo. */
-#define _CAMERA_DEBUG_EN        1
+/* set this to 1 to enable device test demo. */
+#define _DEVICE_DEBUG_EN        1
 
 #define _DEVICE_NAME            "ov2640"
 #define _BUS_NAME               "i2c2"
 
-#define _BUS_I2C_ADDR           0x30
+#define _BUS_I2C_ADDR           (0x30)
 
 #define _CAMERA_WIDTH           BSP_LCD_WIDTH
 #define _CAMERA_HEIGHT          BSP_LCD_HEIGHT
@@ -363,7 +363,7 @@ static rt_size_t _ov2640_ops_read( rt_device_t dev,
                                    void *buffer,
                                    rt_size_t size )
 {
-    return RT_EOK;
+    return 0;
 }
 
 static rt_err_t _ov2640_ops_control( rt_device_t dev,
@@ -415,7 +415,7 @@ int rt_hw_ov2640_init(void)
 }
 INIT_COMPONENT_EXPORT(rt_hw_ov2640_init);
 
-#if defined(_CAMERA_DEBUG_EN) && (_CAMERA_DEBUG_EN)
+#if defined(_DEVICE_DEBUG_EN) && (_DEVICE_DEBUG_EN)
 int ov2640(int argc, char **argv)
 {
     rt_device_t device = RT_NULL;
@@ -464,7 +464,7 @@ int ov2640(int argc, char **argv)
     return 0;
 }
 MSH_CMD_EXPORT_ALIAS(ov2640, ov2640, <usr> ov2640 device test);
-#endif //#if defined(_CAMERA_DEBUG_EN) && (_CAMERA_DEBUG_EN)
+#endif //#if defined(_DEVICE_DEBUG_EN) && (_DEVICE_DEBUG_EN)
 
 #endif //#ifdef RT_USING_OV2640
 

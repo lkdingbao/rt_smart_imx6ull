@@ -29,13 +29,13 @@
 #define DBG_LVL DBG_WARNING
 #include <rtdbg.h>
 
-/* set this to 1 to enable display test demo. */
-#define _DISPLAY_DEBUG_EN       1
+/* set this to 1 to enable device test demo. */
+#define _DEVICE_DEBUG_EN        1
 
 #define _DEVICE_NAME            "pcf8574x"
 #define _BUS_NAME               "i2c2"
 
-#define _BUS_I2C_ADDR           0x3F
+#define _BUS_I2C_ADDR           (0x3F)
 
 #define _DISPLAY_ROW_SIZE       BSP_PCF_COL_NUM
 #define _DISPLAY_COL_SIZE       BSP_PCF_ROW_NUM
@@ -178,7 +178,7 @@ static rt_size_t _pcf8574x_ops_write( rt_device_t dev,
             break;
     }
 
-    return RT_EOK;
+    return size;
 }
 
 #ifdef RT_USING_DEVICE_OPS
@@ -219,7 +219,7 @@ int rt_hw_pcf8574x_init(void)
 }
 INIT_COMPONENT_EXPORT(rt_hw_pcf8574x_init);
 
-#if defined(_DISPLAY_DEBUG_EN) && (_DISPLAY_DEBUG_EN)
+#if defined(_DEVICE_DEBUG_EN) && (_DEVICE_DEBUG_EN)
 int pcf8574x(int argc, char **argv)
 {
     rt_device_t device = RT_NULL;
@@ -244,7 +244,7 @@ int pcf8574x(int argc, char **argv)
     return 0;
 }
 MSH_CMD_EXPORT_ALIAS(pcf8574x, pcf8574x, <usr> pcf8574x device test);
-#endif //#if defined(_DISPLAY_DEBUG_EN) && (_DISPLAY_DEBUG_EN)
+#endif //#if defined(_DEVICE_DEBUG_EN) && (_DEVICE_DEBUG_EN)
 
 #endif //#ifdef RT_USING_PCF8574
 
