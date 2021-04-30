@@ -25,9 +25,13 @@ typedef union {
 
 extern struct skt_lcd_info _g_lcd_info;
 
-void lcd_fill(uint32_t *src, uint32_t *dest, uint32_t num);
-void lcd_show_char( rt_uint16_t x, rt_uint16_t y, rt_uint8_t sz, char c );
-void lcd_show_string( rt_uint16_t x, rt_uint16_t y, rt_uint8_t sz, char *p );
+void lcd_clear( register rt_uint32_t color );
+void lcd_fill( uint32_t *src, uint32_t *dest, uint32_t num );
+void lcd_show_char( uint16_t x, uint16_t y, uint8_t sz, uint8_t c );
+void lcd_show_string( uint16_t x, uint16_t y, uint8_t sz, char *p );
+
+void lcd_draw_point( uint16_t x, uint16_t y, uint32_t color );
+void lcd_draw_line( uint16_t xs, uint16_t ys, uint16_t xe, uint16_t ye, uint32_t color );
 
 #endif //#ifndef __BSP_LCDAPI_H__
 

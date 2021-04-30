@@ -139,6 +139,7 @@
 |LittlevGL|√|Ver 7.9.1|
 |LwIP|√|Ver 2.0.2|
 |elm-chan FatFs|√||
+|graphic3d|√|自定义 3D 图形绘制，支持最原始 Phong 渲染，未加速|
 
 ### 三、测试
 

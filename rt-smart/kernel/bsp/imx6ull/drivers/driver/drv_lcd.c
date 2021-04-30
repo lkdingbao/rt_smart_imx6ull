@@ -138,6 +138,11 @@ static void _lcd_clear( register rt_uint32_t color )
     }
 }
 
+void lcd_clear( register rt_uint32_t color )
+{
+    _lcd_clear(color);
+}
+
 static void _lcd_gpio_init( void )
 {
     for (int i=0; i<GET_ARRAY_NUM(_s_gpio_info); i++)

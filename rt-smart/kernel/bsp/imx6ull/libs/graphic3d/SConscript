@@ -6,13 +6,7 @@ list = os.listdir(cwd)
 CPPPATH = [cwd]
 objs = []
 
-if not GetDepend('RT_USING_LVGL'):
-    SrcRemove(list, ['lvgl'])
-
-if not GetDepend('RT_USING_GRAPHIC3D'):
-    SrcRemove(list, ['graphic3d'])
-
-group = DefineGroup('Libs', src, depend = [''], CPPPATH = CPPPATH)
+group = DefineGroup('graphic3d', src, depend = [''], CPPPATH = CPPPATH)
 
 for d in list:
     path = os.path.join(cwd, d)

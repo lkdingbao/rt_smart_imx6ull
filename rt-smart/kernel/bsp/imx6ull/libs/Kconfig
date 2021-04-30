@@ -1,6 +1,6 @@
 menu "Third-party Libraries Configuration"
 
-config RT_USING_LVGL
+menuconfig RT_USING_LVGL
     bool "Enable LittlevGL"
     default n
 
@@ -10,6 +10,22 @@ config RT_USING_LVGL
             default n
         config BSP_USING_LVGL_EXAMPLE
             bool "Using littlevGL examples"
+    endif
+
+menuconfig RT_USING_GRAPHIC3D
+    bool "Enable Graphic3d"
+    default n
+
+    if RT_USING_GRAPHIC3D
+        config BSP_GRAPHIC3D_BUFFER_WIDTH
+            int "Set Graphic buffer width"
+            default 800
+        config BSP_GRAPHIC3D_BUFFER_HEIGHT
+            int "Set Graphic buffer height"
+            default 480
+        config BSP_GRAPHIC3D_OBJECT_MODEL
+            int "Set Graphic object model(0:none/1:rock/2:cow)"
+            default 2
     endif
 
 endmenu
